@@ -251,6 +251,37 @@ class LateDays extends AbstractModel {
     }
 
     /**
+     * Create late day information then cache it
+     *
+     * @param Core $core Core to construct the late day object
+     * @param string $user_id User getting late day information recalculated
+     */
+    public static function cacheLateDayInfoForUser(Core $core, $user_id) {
+        $user = $core->getQueries()->getUserById($user_id);
+        $ld = LateDays::fromUser($core, $user);
+        //$ld->clearCachedLateData();
+        $ld->cacheLateDay();
+    }
+
+    /**
+     * Cache the late day information for this user
+     *
+     * @param bool $clear true if we are clearing the contents of the cache
+     */
+    public function cacheLateDay($clear = false) {
+        foreach ($this->late_day_info as $g_id => $info) {
+            $this->core->getQueries()->cacheLateDayInfo($this->user->getId(), $g_id, $clear ? null : $info->getStatus(), $info->getGradedGradeable()->getGradeable()->isTeamAssignment());
+        }
+    }
+
+    /**
+     * Clear the cached late day information for this user
+     */
+    public function clearCachedLateData() {
+        //$this->core->getQueries()->clearCachedLateDayInfo($this->user->getId());
+    }
+
+    /**
      * Gets if the user has any late days to use
      * @return bool
      */

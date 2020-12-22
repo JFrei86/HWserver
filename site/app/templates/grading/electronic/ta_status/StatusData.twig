@@ -10,6 +10,18 @@
                 </ul>
                 <br/>
             {% endif %}
+
+            {% if not peer %}
+                <a class="btn btn-default" style="float: right"
+                    onclick="changeLate()">
+                    {% if show_late %}
+                        Exclude Late Submissions
+                    {% else %}
+                        Include Late Submissions
+                    {% endif %}
+                </a>
+            {% endif %}
+
             {% if core.getUser().getGroup() < 4 %}
                 {% if team_assignment %}
                     <br/>
@@ -20,7 +32,11 @@
                     <b>Number of teams:</b> {{ total_submissions }}
                     <br/>
                     <br/>
-                    <b>Teams who have submitted:</b> {{ submitted_total }} / {{ total_submissions }} ({{ submitted_percentage }}%)
+                    {% if show_late %}
+                        <b>Teams who have submitted:</b> {{ submitted_total }} / {{ total_submissions }} ({{ submitted_percentage }}%)
+                    {% else %}
+                        <b>Teams who have submitted on time:</b> {{ non_late_submitted_total }} / {{ total_submissions }} ({{ non_late_submitted_percentage }}%)
+                    {% endif %}
                 {% else %}
                     {% if peer and not team_assignment %}
                         <br/>
@@ -30,10 +46,17 @@
                         <b>Current percentage of TA grading done:</b> {{ graded_total }} / {{ total_students_submitted }} ({{ total_grading_percentage }}%)
                     {% else %}
                         <br/>
-                        <b>Students who have submitted:</b>  {{ submitted_total }} / {{ total_submissions }} ({{ submitted_percentage }}%)
-                        <br/>
-                        <br/>
-                        <b>Current percentage of TA grading done:</b> {{ graded_total }} / {{ submitted_total }} ({{ total_grading_percentage }}%)
+                        {% if show_late %}
+                            <b>Students who have submitted:</b>  {{ submitted_total }} / {{ total_submissions }} ({{ submitted_percentage }}%)
+                            <br/>
+                            <br/>
+                            <b>Current percentage of TA grading done:</b> {{ graded_total }} / {{ submitted_total }} ({{ total_grading_percentage }}%)
+                        {% else %}
+                            <b>Students who have submitted on time:</b>  {{ non_late_submitted_total }} / {{ total_submissions }} ({{ non_late_submitted_percentage }}%)
+                            <br/>
+                            <br/>
+                            <b>Current percentage of TA grading done:</b> {{ non_late_graded_total }} / {{ non_late_submitted_total }} ({{ non_late_total_grading_percentage }}%)
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             
@@ -48,7 +71,11 @@
                 <div style="margin-left: 20px">
                     {% for key, section in sections %}
                         {% if key != "peer_stu_grad"%}
-                            Section {{ key }}: {{ section.graded }} / {{ section.total }} ({{ section.percentage }}%)<br />
+                            {% if show_late %}
+                                Section {{ key }}: {{ section.graded }} / {{ section.total }} ({{ section.percentage }}%)<br />
+                            {% else %}
+                                Section {{ key }}: {{ section.non_late_graded }} / {{ section.non_late_total }} ({{ section.non_late_percentage }}%)<br />
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </div>

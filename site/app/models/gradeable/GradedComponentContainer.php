@@ -261,6 +261,14 @@ class GradedComponentContainer extends AbstractModel {
     }
 
     /**
+     * Gets the number of components graded
+     * @return int
+     */
+    public function getComponentsGraded() {
+        return count($this->graded_components);
+    }
+
+    /**
      * Gets the percent graded this component is (only relevant for peer grading)
      * @return float percentage (0 to 1) not clamped to 100%
      */

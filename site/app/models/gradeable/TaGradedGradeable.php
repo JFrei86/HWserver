@@ -271,6 +271,19 @@ class TaGradedGradeable extends AbstractModel {
     }
 
     /**
+     * Gets how many of this submitter's components has been graded
+     * @return int
+     */
+    public function getComponentsGraded() {
+        $running_num = 0;
+        /** @var GradedComponentContainer $container */
+        foreach ($this->graded_component_containers as $container) {
+            $running_num += $container->getComponentsGraded();
+        }
+        return $running_num;
+    }
+
+    /**
      * Gets how much of this submitter's submission has been graded
      * @return float percentage (0 to 1) not clamped to 100%, or NAN if no component in gradeable
      */

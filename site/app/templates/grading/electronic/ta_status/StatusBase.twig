@@ -409,4 +409,15 @@
             $("#zip_link").attr("href", download_zip_url + "?type=" + download_option);
         }
     }
+
+    function changeLate() {
+        var status = '{{ show_late }}';
+        if (status) {
+            document.cookie = "show_late=false;";
+        }
+        else {
+            document.cookie = "show_late=true;";
+        }
+        location.reload();
+    }
 </script>

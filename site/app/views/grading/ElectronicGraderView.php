@@ -59,14 +59,19 @@ class ElectronicGraderView extends AbstractView {
             $peer = true;
         }
         $graded = 0;
+        $non_late_graded = 0;
         $total = 0;
+        $non_late_total = 0;
         $no_team_total = 0;
         $team_total = 0;
         $team_percentage = 0;
         $total_students = 0;
         $graded_total = 0;
+        $non_late_graded_total = 0;
         $submitted_total = 0;
+        $non_late_submitted_total = 0;
         $submitted_percentage = 0;
+        $non_late_submitted_percentage = 0;
         $submitted_percentage_peer = 0;
         $peer_total = 0;
         $peer_graded = 0;
@@ -74,6 +79,7 @@ class ElectronicGraderView extends AbstractView {
         $entire_peer_graded = 0;
         $entire_peer_total = 0;
         $total_grading_percentage = 0;
+        $non_late_total_grading_percentage = 0;
         $entire_peer_percentage = 0;
         $viewed_total = 0;
         $viewed_percent = 0;
@@ -87,11 +93,16 @@ class ElectronicGraderView extends AbstractView {
         $this->core->getOutput()->addVendorJs(FileUtils::joinPaths('plotly', 'plotly.js'));
 
         foreach ($sections as $key => $section) {
+            // $section['non_late_graded_components'] = 0;//$section['graded_components'];
+            // $section['non_late_total_components'] = 0;//$section['total_components'];
+
             if ($key === "NULL") {
                 continue;
             }
             $graded += $section['graded_components'];
             $total += $section['total_components'];
+            $non_late_graded += $section['non_late_graded_components'];
+            $non_late_total += $section['non_late_total_components'];
             if ($gradeable->isTeamAssignment()) {
                 $no_team_total += $section['no_team'];
                 $team_total += $section['team'];
@@ -118,12 +129,21 @@ class ElectronicGraderView extends AbstractView {
             $num_non_peer_components = count($gradeable->getNonPeerComponents());
             $num_components = $num_peer_components + $num_non_peer_components;
             $submitted_total = $num_components > 0 ? $total : 0;
+            $non_late_submitted_total = $num_components > 0 ? $non_late_total : 0;
             $graded_total = $num_components > 0 ? round($graded / $num_components, 2) : 0;
+            $non_late_graded_total = $num_components > 0 ? round($non_late_graded / $num_components, 2) : 0;
             if ($submitted_total > 0) {
                 $total_grading_percentage =  number_format(($graded_total / $submitted_total ) * 100, 1);
             }
             else {
                 $total_grading_percentage = 0;
+            }
+
+            if ($non_late_submitted_total > 0) {
+                $non_late_total_grading_percentage =  number_format(($non_late_graded_total / $non_late_submitted_total ) * 100, 1);
+            }
+            else {
+                $non_late_total_grading_percentage = 0;
             }
             if ($peer) {
                 $num_peer_components = count($gradeable->getPeerComponents());
@@ -134,7 +154,9 @@ class ElectronicGraderView extends AbstractView {
             }
             if ($total_submissions != 0) {
                 $submitted_percentage = round((($submitted_total) / $total_submissions) * 100, 1);
+                $non_late_submitted_percentage = $non_late_submitted_total > 0 ? round((($non_late_submitted_total) / $total_submissions) * 100, 1) : 0;
             }
+
             //Add warnings to the warnings array to display them to the instructor.
             $warnings = [];
             if ($section_type === "rotating_section" && $show_warnings) {
@@ -195,11 +217,21 @@ class ElectronicGraderView extends AbstractView {
                 $non_zero_non_peer_components_count = $non_peer_components_count != 0 ? $non_peer_components_count : 1;
                 $section['graded'] = round($section['graded_components'] / $non_zero_non_peer_components_count, 1);
                 $section['total'] = $section['total_components'];
+                $section['non_late_graded'] = round($section['non_late_graded_components'] / $non_zero_non_peer_components_count, 1);
+                $section['non_late_total'] = $section['non_late_total_components'];// / $non_zero_non_peer_components_count;
+
                 if ($section['total_components'] == 0) {
                     $section['percentage'] = 0;
                 }
                 else {
                     $section['percentage'] = number_format(($section['graded'] / $section['total']) * 100, 1);
+                }
+
+                if ($section['non_late_total'] == 0) {
+                    $section['non_late_percentage'] = 0;
+                }
+                else {
+                    $section['non_late_percentage'] = number_format(($section['non_late_graded'] / $section['non_late_total']) * 100, 1);
                 }
             }
                 unset($section); // Clean up reference
@@ -279,15 +311,19 @@ class ElectronicGraderView extends AbstractView {
             "total_submissions" => $total_submissions,
             "no_team_total"   => $no_team_total,
             "submitted_total" => $submitted_total,
+            "non_late_submitted_total" => $non_late_submitted_total,
             "submitted_percentage" => $submitted_percentage,
+            "non_late_submitted_percentage" => $non_late_submitted_percentage,
             "submitted_percentage_peer" => $submitted_percentage_peer,
             "graded_total" => $graded_total,
+            "non_late_graded_total" => $non_late_graded_total,
             "graded_percentage" => $graded_percentage,
             "peer_total" => $peer_total,
             "peer_graded" => $peer_graded,
             "peer_percentage" => $peer_percentage,
             "entire_peer_total" => $entire_peer_total,
             "total_grading_percentage" => $total_grading_percentage,
+            "non_late_total_grading_percentage" => $non_late_total_grading_percentage, //****
             "entire_peer_graded" => $entire_peer_graded,
             "entire_peer_percentage" => $entire_peer_percentage,
             "sections" => $sections,
@@ -316,7 +352,8 @@ class ElectronicGraderView extends AbstractView {
             "grade_url" => $this->core->buildCourseUrl(['gradeable', $gradeable->getId(), 'grading', 'grade']),
             "regrade_allowed" => $this->core->getConfig()->isRegradeEnabled(),
             "grade_inquiry_per_component_allowed" => $gradeable->isGradeInquiryPerComponentAllowed(),
-            "histograms" => $histogram_data
+            "histograms" => $histogram_data,
+            "show_late" => array_key_exists('show_late', $_COOKIE) ? $_COOKIE['show_late'] === 'true' : true
         ]);
     }
 
@@ -325,21 +362,19 @@ class ElectronicGraderView extends AbstractView {
         $gradeable_id = $_REQUEST['gradeable_id'] ?? '';
 
         $return = <<<HTML
-
-		<div class="content_upload_content">
-
+        <div class="content_upload_content">
 HTML;
         $this->core->getOutput()->addBreadcrumb("Bulk Upload Forensics", $this->core->buildCourseUrl(['gradeable', $gradeable_id, 'bulk_stats']));
 
         $return .= <<<HTML
-			<div style="padding-left:20px;padding-bottom: 10px;border-radius:3px;padding-right:20px;">
-				<table class="table table-striped table-bordered persist-area" id="content_upload_table">
-					<tr>
-				        <th style = "cursor:pointer;width:25%" id="user_down">User &darr;</th>
-				        <th style = "cursor:pointer;width:25%" id="upload_down">Upload Timestamp</th>
-				        <th style = "cursor:pointer;width:25%" id="submission_down">Submission Timestamp</th>
-				        <th style = "cursor:pointer;width:25%" id="filepath_down">Filepath</th>
-					</tr>
+            <div style="padding-left:20px;padding-bottom: 10px;border-radius:3px;padding-right:20px;">
+                <table class="table table-striped table-bordered persist-area" id="content_upload_table">
+                    <tr>
+                        <th style = "cursor:pointer;width:25%" id="user_down">User &darr;</th>
+                        <th style = "cursor:pointer;width:25%" id="upload_down">Upload Timestamp</th>
+                        <th style = "cursor:pointer;width:25%" id="submission_down">Submission Timestamp</th>
+                        <th style = "cursor:pointer;width:25%" id="filepath_down">Filepath</th>
+                    </tr>
 HTML;
 
         foreach ($users as $user => $details) {
@@ -350,75 +385,64 @@ HTML;
             $filepath = htmlspecialchars($details["file"]);
 
             $return .= <<<HTML
-			<tbody>
-				<tr>
-					<td>{$last_name}, {$first_name}</td>
+            <tbody>
+                <tr>
+                    <td>{$last_name}, {$first_name}</td>
                     <td>{$upload_timestamp}</td>
                     <td>{$submit_timestamp}</td>
                     <td>{$filepath}</td>
-				</tr>
-			</tbody>
+                </tr>
+            </tbody>
 HTML;
         }
 
         $return .= <<<HTML
-				</table>
-			</div>
-			</div>
-
-			<script>
-				$("td").click(function(){
-					if($(this).attr('id')=="user_down"){
-						sortTable(0);
-					}
-					if($(this).attr('id')=="upload_down"){
-						sortTable(1);
-					}
-					if($(this).attr('id')=="submission_down"){
-						sortTable(2);
-					}
-					if($(this).attr('id')=="filepath_down"){
-						sortTable(3);
-					}
-
-				});
-
-				function sortTable(sort_element_index){
-					var table = document.getElementById("content_upload_table");
-					var switching = true;
-					while(switching){
-						switching=false;
-						var rows = table.getElementsByTagName("TBODY");
-						for(var i=1;i<rows.length-1;i++){
-
-							var a = rows[i].getElementsByTagName("TR")[0].getElementsByTagName("TD")[sort_element_index];
-							var b = rows[i+1].getElementsByTagName("TR")[0].getElementsByTagName("TD")[sort_element_index];
+                </table>
+            </div>
+            </div>
+            <script>
+                $("td").click(function(){
+                    if($(this).attr('id')=="user_down"){
+                        sortTable(0);
+                    }
+                    if($(this).attr('id')=="upload_down"){
+                        sortTable(1);
+                    }
+                    if($(this).attr('id')=="submission_down"){
+                        sortTable(2);
+                    }
+                    if($(this).attr('id')=="filepath_down"){
+                        sortTable(3);
+                    }
+                });
+                function sortTable(sort_element_index){
+                    var table = document.getElementById("content_upload_table");
+                    var switching = true;
+                    while(switching){
+                        switching=false;
+                        var rows = table.getElementsByTagName("TBODY");
+                        for(var i=1;i<rows.length-1;i++){
+                            var a = rows[i].getElementsByTagName("TR")[0].getElementsByTagName("TD")[sort_element_index];
+                            var b = rows[i+1].getElementsByTagName("TR")[0].getElementsByTagName("TD")[sort_element_index];
                             // sorted alphabetically by last name or by earliest time
-							if((sort_element_index >= 0 && sort_element_index <= 3) ? a.innerHTML>b.innerHTML : parseInt(a.innerHTML) < parseInt(b.innerHTML)){
-								rows[i].parentNode.insertBefore(rows[i+1],rows[i]);
-								switching=true;
-							}
-						}
-					}
-
-					var row0 = table.getElementsByTagName("TBODY")[0].getElementsByTagName("TR")[0];
-					var headers = row0.getElementsByTagName("TD");
-
-					for(var i = 0;i<headers.length;i++){
-						var index = headers[i].innerHTML.indexOf(' ↓');
-
-						if(index> -1){
-
-							headers[i].innerHTML = headers[i].innerHTML.substr(0, index);
-							break;
-						}
-					}
-
-					headers[sort_element_index].innerHTML = headers[sort_element_index].innerHTML + ' ↓';
-
-				}
-
-			</script>
+                            if((sort_element_index >= 0 && sort_element_index <= 3) ? a.innerHTML>b.innerHTML : parseInt(a.innerHTML) < parseInt(b.innerHTML)){
+                                rows[i].parentNode.insertBefore(rows[i+1],rows[i]);
+                                switching=true;
+                            }
+                        }
+                    }
+                    var row0 = table.getElementsByTagName("TBODY")[0].getElementsByTagName("TR")[0];
+                    var headers = row0.getElementsByTagName("TD");
+                    for(var i = 0;i<headers.length;i++){
+                        var index = headers[i].innerHTML.indexOf(' ↓');
+                        if(index> -1){
+                            headers[i].innerHTML = headers[i].innerHTML.substr(0, index);
+                            break;
+                        }
+                    }
+                    headers[sort_element_index].innerHTML = headers[sort_element_index].innerHTML + ' ↓';
+                }
+            </script>
 HTML;
         return $return;
     }
@@ -899,8 +923,8 @@ HTML;
             $this->core->getOutput()->addInternalJs("resizable-panels.js");
 
             $return .= <<<HTML
-        		<div class="content" id="electronic-gradeable-container">
-        		    <div class="content-items-container">
+                <div class="content" id="electronic-gradeable-container">
+                    <div class="content-items-container">
                     <div class="content-item content-item-right">
 HTML;
             $return .= $this->core->getOutput()->renderTemplate(['grading', 'ElectronicGrader'], 'renderNavigationBar', $graded_gradeable, $progress, $gradeable->isPeerGrading(), $sort, $direction, $from, ($this->core->getUser()->getGroup() == User::GROUP_LIMITED_ACCESS_GRADER && $gradeable->getLimitedAccessBlind() == 2), $showNewInterface);
@@ -1068,7 +1092,7 @@ HTML;
                     </div>
                 </div>
             </div>
-		</div>
+        </div>
 HTML;
         }
         return $return;
