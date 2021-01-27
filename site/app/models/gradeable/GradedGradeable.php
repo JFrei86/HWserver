@@ -39,6 +39,9 @@ class GradedGradeable extends AbstractModel {
     /** @prop @var array The late day exceptions indexed by user id */
     protected $late_day_exceptions = [];
 
+    /** @prop @var int Late Day Info STatus */
+    protected $late_day_status = null;
+
     /** @prop @var bool|null|SimpleGradeOverriddenUser Does this graded gradeable have overridden grades */
     protected $overridden_grades = false;
 
@@ -67,6 +70,34 @@ class GradedGradeable extends AbstractModel {
         $this->submitter = $submitter;
 
         $this->late_day_exceptions = $details['late_day_exceptions'] ?? [];
+        $this->late_day_status = $details['late_day_status'] ?? null;
+    }
+
+    /**
+     * Gets if the submitter submitted on time
+     * @return bool
+     */
+    public function isOnTimeSubmission() {
+        // if there is no submission, ignore
+        if (!$this->hasSubmission()) {
+            return true;
+        }
+
+        // If there is no info cached, treat it as a normal gradeable
+        if (!$this->hasLateDayInfoCached()) {
+            LateDays::cacheLateDayInfoForUser($this->core, $this->submitter->getId());
+            return true;
+        }
+
+        return $this->late_day_status == LateDayInfo::STATUS_GOOD || $this->late_day_status == LateDayInfo::STATUS_LATE;
+    }
+
+    /**
+     * Gets if the submitter submitted on time
+     * @return bool
+     */
+    public function hasLateDayInfoCached() {
+        return $this->late_day_status != null;
     }
 
     /**
