@@ -141,8 +141,15 @@ SITE_CONFIG_DIR = os.path.join(SUBMITTY_INSTALL_DIR, "site", "config")
 CONFIG_INSTALL_DIR = os.path.join(SUBMITTY_INSTALL_DIR, 'config')
 SUBMITTY_ADMIN_JSON = os.path.join(CONFIG_INSTALL_DIR, 'submitty_admin.json')
 EMAIL_JSON = os.path.join(CONFIG_INSTALL_DIR, 'email.json')
+AUTHENTICATION_JSON = os.path.join(CONFIG_INSTALL_DIR, 'authentication.json')
 
 ##############################################################################
+
+authentication_methods = [
+    'PamAuthentication',
+    'DatabaseAuthentication',
+    'LdapAuthentication',
+]
 
 defaults = {
     'database_host': 'localhost',
@@ -166,7 +173,12 @@ defaults = {
     'email_server_port': 25,
     'course_code_requirements': "Please follow your school's convention for course code.",
     'sys_admin_email': '',
-    'sys_admin_url': ''
+    'sys_admin_url': '',
+    'ldap_options': {
+        'url': '',
+        'uid': '',
+        'bind_dn': ''
+    }
 }
 
 loaded_defaults = {}
@@ -180,13 +192,14 @@ if os.path.isfile(EMAIL_JSON):
     with open(EMAIL_JSON) as email_file:
         loaded_defaults.update(json.load(email_file))
 
+if os.path.isfile(AUTHENTICATION_JSON):
+    with open(AUTHENTICATION_JSON) as authentication_file:
+        loaded_defaults.update(json.load(authentication_file))
 
-    #no need to authenticate on a worker machine (no website)
-    if not args.worker:
-        if 'authentication_method' in loaded_defaults:
-            loaded_defaults['authentication_method'] = 1 if loaded_defaults['authentication_method'] == 'PamAuthentication' else 2
-        else:
-            loaded_defaults['authentication_method'] = 2
+#no need to authenticate on a worker machine (no website)
+if not args.worker:
+    if 'authentication_method' in loaded_defaults:
+        loaded_defaults['authentication_method'] = authentication_methods.index(loaded_defaults['authentication_method'])
 
 # grab anything not loaded in (useful for backwards compatibility if a new default is added that
 # is not in an existing config file.)
@@ -260,21 +273,34 @@ else:
 
     USERNAME_TEXT = defaults['username_change_text']
 
-    print("What authentication method to use:\n1. PAM\n2. Database\n")
+    print('What authentication method to use:')
+    for i in range(len(authentication_methods)):
+        print(f"{i + 1}. {authentication_methods[i]}")
+
     while True:
         try:
             auth = int(get_input('Enter number?', defaults['authentication_method']))
         except ValueError:
             auth = 0
-        if 0 < auth < 3:
+        if auth not in range(1, len(authentication_methods)):
             break
-        print('Number must be between 0 and 3')
+        print(f'Number must in between 1 - {len(authentication_methods)} (inclusive)!')
     print()
 
-    if auth == 1:
-        AUTHENTICATION_METHOD = 'PamAuthentication'
-    else:
-        AUTHENTICATION_METHOD = 'DatabaseAuthentication'
+    AUTHENTICATION_METHOD = authentication_methods[auth]
+
+    default_auth_options = defaults.get('ldap_options', dict())
+    LDAP_OPTIONS = {
+        'url': default_auth_options.get('url', ''),
+        'uid': default_auth_options.get('uid', ''),
+        'bind_dn': default_auth_options.get('bind_dn', '')
+    }
+
+    if AUTHENTICATION_METHOD == 'LdapAuthentication':
+        LDAP_OPTIONS['url'] = get_input('Enter LDAP url?', LDAP_OPTIONS['url'])
+        LDAP_OPTIONS['uid'] = get_input('Enter LDAP UID?', LDAP_OPTIONS['uid'])
+        LDAP_OPTIONS['bind_dn'] = get_input('Enter LDAP bind_dn?', LDAP_OPTIONS['bind_dn'])
+
 
     CGI_URL = SUBMISSION_URL + '/cgi-bin'
 
@@ -511,6 +537,18 @@ if not args.worker:
         json.dump(config, json_file, indent=2)
     shutil.chown(DATABASE_JSON, 'root', DAEMONPHP_GROUP)
     os.chmod(DATABASE_JSON, 0o440)
+
+##############################################################################
+# Write authentication json
+if not args.worker:
+    config = OrderedDict()
+    config['authentication_method'] = AUTHENTICATION_METHOD
+    config['ldap_options'] = LDAP_OPTIONS
+
+    with open(AUTHENTICATION_JSON, 'w') as json_file:
+        json.dump(config, json_file, indent=2)
+    shutil.chown(AUTHENTICATION_JSON, 'root', DAEMONPHP_GROUP)
+    os.chmod(AUTHENTICATION_JSON, 0o440)
 
 ##############################################################################
 # Write submitty json
