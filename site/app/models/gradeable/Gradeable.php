@@ -802,6 +802,11 @@ class Gradeable extends AbstractModel {
         $this->grade_due_date = $dates['grade_due_date'];
         $this->grade_released_date = $dates['grade_released_date'];
         $this->grade_locked_date = $dates['grade_locked_date'];
+        $this->team_lock_date = $dates['team_lock_date'];
+        $this->submission_open_date = $dates['submission_open_date'];
+        $this->submission_due_date = $dates['submission_due_date'];
+        $this->grade_inquiry_start_date = $dates['grade_inquiry_start_date'];
+        $this->grade_inquiry_due_date = $dates['grade_inquiry_due_date'];
 
         if ($this->type === GradeableType::ELECTRONIC_FILE) {
             // Set team lock date even if not team assignment because it is NOT NULL in the db
