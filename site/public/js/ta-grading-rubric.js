@@ -2968,7 +2968,8 @@ function saveGradedComponent(component_id) {
     let gradeable_id = getGradeableId();
     let gradedComponent = getGradedComponentFromDOM(component_id);
     gradedComponent.graded_version = getDisplayVersion();
-
+    
+    console.log(gradeable_id);
     // The grader didn't change the grade at all, so don't save (don't put our name on a grade we didn't contribute to)
     if (gradedComponentsEqual(gradedComponent, OLD_GRADED_COMPONENT_LIST[component_id])) {
         return Promise.resolve();
@@ -3207,3 +3208,14 @@ function addItempoolOptions(componentId) {
   select_ele.html(itempool_options);
   select_ele.val(selected_value).change();
 }
+
+$(document).ready(async function(){
+    $(window).on('beforeunload', function(e){
+        getOpenComponentIds().forEach(function(id){
+            closeComponent(id, true);
+            saveMarkList(id);
+            setTimeout(null, 10000);
+        });
+        
+    });
+});
