@@ -588,6 +588,9 @@
         "details" : {
           "type" : "string"
         },
+        "penalty-points" : {
+          "type" : "integer"
+        },
         "containers" : {
           "type": "array",
           "description" : "Specifies the environment that will be invoked to process this testcase. When grading using 'autograding_method' : 'docker', multiple containers may be specified to run networked gradeables.",
