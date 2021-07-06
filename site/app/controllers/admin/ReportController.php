@@ -386,6 +386,7 @@ class ReportController extends AbstractController {
      * @param string $base_path the base path to store the report
      */
     private function generatePollSummaryInternal(string $base_path): void {
+        // TODO: rewrite
         $polls = $this->core->getQueries()->getPolls();
         $polls_data = [];
         foreach ($polls as $poll) {
@@ -395,6 +396,9 @@ class ReportController extends AbstractController {
             ];
         }
         FileUtils::writeJsonFile(FileUtils::joinPaths($base_path, "poll_responses.json"), $polls_data);
+
+        /** @var Poll[] */
+        $polls = $this->core->getCourseEntityManager()->getRepository(Poll::class)->findAll();
         FileUtils::writeJsonFile(FileUtils::joinPaths($base_path, "poll_questions.json"), PollUtils::getPollExportData($polls));
     }
 

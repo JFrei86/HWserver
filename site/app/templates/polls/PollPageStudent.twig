@@ -19,13 +19,13 @@
             {% if poll_type == "single-response" %}
                 <label class="radio" for="answer-no-response">
                     {% if poll.isOpen() %}
-                        {% if poll.getUserResponse(user_id) is same as(null) %}
+                        {% if responses is empty %}
                             <input type="radio" value="-1" name="answers[]" id="answer-no-response" checked/>
                         {% else %}
                             <input type="radio" value="-1" name="answers[]" id="answer-no-response"/>
                         {% endif %}
                     {% else %}
-                        {% if poll.getUserResponse(user_id) is same as(null) %}
+                        {% if responses is empty %}
                             <input type="radio" value="-1" name="answers[]" id="answer-no-response" checked disabled/>
                         {% else %}
                             <input type="radio" value="-1" name="answers[]" id="answer-no-response" disabled/>
@@ -35,54 +35,50 @@
                 </label>
                 <br/>
                 <br/>
-                {% set index = 0%}
-                {% for response in poll.getResponses() %}
+                {% for option in poll.getOptions() %}
                     <div class = "radio">
-                        {% if response in poll.getUserResponse(user_id) %}
+                        {% if option.getId() in responses %}
                             {% if poll.isOpen() %}
-                                <input type=radio aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" checked/>
+                                <input type=radio aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" checked/>
                             {% else %}
-                                <input type=radio aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" checked disabled/>
+                                <input type=radio aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" checked disabled/>
                             {% endif %}
                         {% elseif poll.isOpen() %}
-                            <input type=radio aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}"/>
+                            <input type=radio aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}"/>
                         {% else %}
-                            <input type=radio aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" disabled/>
+                            <input type=radio aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" disabled/>
                         {% endif %}
                         {% include "misc/Markdown.twig" with {
-                            "content" : poll.getResponseString(response),
+                            "content" : option.getResponse(),
                             "style": "display: inline-block"
                         } only %}
                         <br/>
                         <br/>
                     </div>
-                    {% set index = index + 1%}
                 {% endfor %}
 
 
             {% else %} {# poll_type == "multiple-response" #}
-                {% set index = 0%}
-                {% for response in poll.getResponses() %}
+                {% for option in poll.getOptions() %}
                     <div class = "radio">
-                        {% if response in poll.getUserResponse(user_id) %}
+                        {% if option.getId() in responses %}
                             {% if poll.isOpen() %}
-                                <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" checked/>
+                                <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" checked/>
                             {% else %}
-                                <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" checked disabled/>
+                                <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" checked disabled/>
                             {% endif %}
                         {% elseif poll.isOpen() %}
-                            <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}"/>
+                            <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}"/>
                         {% else %}
-                            <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ response }}" name="answers[]" id="answer-{{index}}" disabled/>
+                            <input type="checkbox" aria-label="Option {{ index + 1 }}" value="{{ option.getId() }}" name="answers[]" id="answer-{{loop.index0}}" disabled/>
                         {% endif %}
                         {% include "misc/Markdown.twig" with {
-                            "content" : poll.getResponseString(response),
+                            "content" : option.getResponse(),
                             "style" : "display: inline-block;"
                         } only %}
                         <br/>
                         <br/>
                     </div>
-                    {% set index = index + 1%}
                 {% endfor %}
             {% endif %}
         </fieldset>

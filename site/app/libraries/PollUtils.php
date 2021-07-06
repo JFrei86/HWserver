@@ -13,28 +13,31 @@ use app\libraries\FileUtils;
 class PollUtils {
     /**
      * Generates a PHP array containing the all the poll data used in the export procedure
-     * @param array $polls the array of polls to be summarized
+     * @param \app\entities\poll\Poll[] $polls the array of polls to be summarized
      */
     public static function getPollExportData(array $polls): array {
-        $data = [];
+        $export_data = [];
         foreach ($polls as $poll) {
-            $responses = [];
-            foreach ($poll->getResponses() as $response) {
-                $responses[$response] = $poll->getResponseString($response);
-            }
-            $data[] = [
-                "id" => $poll->getId(),
-                "name" => $poll->getName(),
-                "question" => $poll->getQuestion(),
-                "question_type" => $poll->getQuestionType(),
-                "responses" => $responses,
-                "correct_responses" => $poll->getAnswers(),
-                "release_date" => $poll->getReleaseDate(),
-                "status" => $poll->getStatus(),
-                "image_path" => $poll->getImagePath()
+            $poll_data = [
+                'id' => $poll->getId(),
+                'name' => $poll->getName(),
+                'question' => $poll->getQuestion(),
+                'question_type' => $poll->getQuestionType(),
+                'responses' => [],
+                'correct_responses' => [],
+                'release_date' => $poll->getReleaseDate()->format('Y-m-d'),
+                'status' => $poll->getStatus(),
+                'image_path' => $poll->getImagePath(),
             ];
+            foreach ($poll->getOptions() as $option) {
+                $poll_data['responses'][$option->getId()] = $option->getResponse();
+                if ($option->isCorrect()) {
+                    $poll_data['correct_responses'][] = $option->getId();
+                }
+            }
+            $export_data[] = $poll_data;
         }
-        return $data;
+        return $export_data;
     }
 
     public static function getPollTypes(): array {

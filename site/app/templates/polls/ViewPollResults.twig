@@ -1,29 +1,23 @@
 <script>
     window.onload = function() {
         const xPoints = [];
-        const xPointsIndexes = [];
         const yPoints = [];
         let string;
-        {% for answer, number in results %}
-            string = "{{ poll.getResponseString(answer) }}";
-            xPoints.push(string);
-            xPointsIndexes.push({{ answer }});
-            yPoints.push({{ number }});
+        {% for option in poll.getOptions() %}
+            xPoints.push("{{ option.getResponse() }}");
+            yPoints.push({{ option.getUserResponses() | length }});
         {% endfor %}
         const data = [
           {
+            x: xPoints,
             y: yPoints,
             type: 'bar'
           }
         ];
         const layout = {
           title: "{{ poll.getName() }}",
-          xaxis: {
-            tickmode: "array",
-            ticktext: xPoints,
-            tickvals: xPointsIndexes
-          }
         }
+        console.log(layout);
         Plotly.newPlot("chartContainer", data, layout);
     }
 </script>
@@ -32,7 +26,7 @@
     <h1> Viewing poll results for {{ poll.getName() }} </h1>
 
     <h2> Question: </h2>
-    {% include "misc/Markdown" with {
+    {% include "misc/Markdown.twig" with {
       "content" : poll.getQuestion()
     } only %}
     <br/>

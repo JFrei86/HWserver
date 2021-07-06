@@ -39,9 +39,9 @@
                 {% for poll in todays_polls %}
                     <tr>
                         <td>
-                                <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
-                                        <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
-                                </a>
+                            <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
+                                <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
+                            </a>
                         </td>
                         <td>
                                 <a class="fas fa-trash black-btn" tabindex="0" href='javascript:newDeletePollForm("{{ poll.getId() }}", "{{ poll.getName() }}","{{ base_url }}");' title="delete poll {{ poll.getName() }}" aria-label="delete poll {{ poll.getId() }}"></a>
@@ -104,17 +104,17 @@
                 {% for poll in older_polls %}
                     <tr>
                         <td>
-                                <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
-                                        <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
-                                </a>
+                            <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
+                                <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
+                            </a>
                         </td>
                         <td>
                                 <a class="fas fa-trash black-btn" tabindex="0" href='javascript:newDeletePollForm("{{ poll.getId() }}", "{{ poll.getName() }}", "{{ base_url }}");' title="delete poll {{ poll.getName() }}" aria-label="delete poll {{ poll.getId() }}"></a>
-                        </td>	
-                        <td align="left"> 
+                        </td>
+                        <td align="left">
                             {{ poll.getName() }}
                         </td>
-                        <td> {{ poll.getReleaseDate() }} </td>
+                        <td> {{ poll.getReleaseDate() | date("Y-m-d") }} </td>
                         <td>
                             <input type="checkbox" id="poll_{{ poll.getId() }}_visible" aria-label="label" onclick='updatePollVisible("{{ poll.getId() }}", "{{ base_url }}")' {{ (poll.isOpen() or poll.isEnded) ? 'checked' : '' }}>
                         </td>
@@ -165,17 +165,17 @@
                 {% for poll in future_polls %}
                     <tr>
                         <td>
-                                <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
-                                        <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
-                                </a>
+                            <a class="fas fa-pencil-alt black-btn" tabindex="0" href="{{base_url}}/editPoll/{{ poll.getId() }}" title="edit poll {{ poll.getName() }}" aria-label="edit poll {{ poll.getId() }}">
+                                <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
+                            </a>
                         </td>
                         <td>
-                                <a class="fas fa-trash black-btn" tabindex="0" href='javascript:newDeletePollForm("{{ poll.getId() }}", "{{ poll.getName() }}", "{{ base_url }}");' title="delete poll {{ poll.getName() }}" aria-label="delete poll {{ poll.getId() }}"></a>
+                            <a class="fas fa-trash black-btn" tabindex="0" href='javascript:newDeletePollForm("{{ poll.getId() }}", "{{ poll.getName() }}", "{{ base_url }}");' title="delete poll {{ poll.getName() }}" aria-label="delete poll {{ poll.getId() }}"></a>
                         </td>
                         <td align="left">
                             {{ poll.getName() }}
                         </td>
-                        <td> {{ poll.getReleaseDate() }} </td>
+                        <td> {{ poll.getReleaseDate() | date("Y-m-d") }} </td>
                         <td> {{ poll.getUserResponses()|length }} </td>
                         <td>
                             <a href="{{base_url}}/viewResults/{{ poll.getId() }}">
@@ -206,7 +206,20 @@
                 cache: false,
                 contentType: false,
                 success: function(data) {
-                    window.location.reload(false);
+                    try {
+                        const msg = JSON.parse(data);
+                        if (msg.status !== 'success') {
+                            console.error(err);
+                            window.alert("Something went wrong. Please try again.");
+                        }
+                        else {
+                            window.location.reload();
+                        }
+                    }
+                    catch (err) {
+                        console.error(err);
+                        window.alert("Something went wrong. Please try again.");
+                    }
                 },
                 error: function(err) {
                     console.error(err);

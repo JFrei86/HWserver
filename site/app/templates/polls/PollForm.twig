@@ -1,165 +1,151 @@
+{% set url_path = poll is not null ? "/editPoll/submitEdits" : "/newPoll" %}
+{% set question_type = poll is not null ? poll.getQuestionType() : 'single-response-multiple-correct' %}
+
 <div class="content">
-    {% if not poll is defined %}
-        <h1> Add a New Poll </h1>
+    <h1>{{ poll is not null ? "Edit Poll" : "Add a New Poll" }}</h1>
 
-        <form id="new-poll-form" method="post" action="{{base_url}}/newPoll" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
-            <input type="hidden" name="response_count" id="response-count" value="0"/>
-            <input type="hidden" name="removed_responses" id="removed-responses" value=""/>
-
-            <label for="poll-name" class="option-title">
-                Poll Name:
-            </label>
-            <input type="text" name="name" id="poll-name" placeholder="Enter name here..."/>
-            <br/> <br/>
-
-            <p class="option-title">Question:</p>
-            {% include "misc/MarkdownArea.twig" with {
-                "markdown_area_id" : "poll-question",
-                "markdown_area_query" : "$('#poll-question')",
-                "markdown_area_name" : "question",
-                "markdown_area_value" : "",
-                "placeholder" : "Enter question here...",
-                "preview_div_id" : "poll_preview_new",
-                "preview_div_name" : "poll_preview_new",
-                "onclick" : "previewPollMarkdown.call(this)",
-                "render_buttons" : true,
-                "min_height" : min_height
-            } only %}
-            <br/><br/>
-
-            {% include "polls/PollType.twig" %}
-
-            <br/>
-
-            <label for="image-file" class="option-title">
-                Optional Image:
-            </label>
-            <input type="file" id="image-file" name="image_file" accept="image/jpeg, image/jpg, image/gif, image/png" onchange="checkSize(this)"/>
-            <br/><br/>
-
-            <label for="poll-date" class="option-title">
-                Expected release date:
-            </label>
-            <input id="poll-date" class="poll-date" name="release_date" autocomplete="off" type="text" size="10" value="{{ poll.getReleaseDate() }}"/>
-            <br/>
-
-            <hr>
-            <h2> Responses: </h2>
-            <div id="responses">
-
-            </div>
-            <br/>
-            <button type="button" class="btn btn-primary" onclick="addResponse()">+ Add Response</button>
-            <br/> <br/>
-            <hr>
-            <span id="empty-name-error" class="red-message polls-submit-error">Please make sure poll name is filled in.<br/></span>
-            <span id="empty-question-error" class="red-message polls-submit-error" hidden>Please make sure question is filled in.<br/></span>
-            <span id="question-type-error" class="red-message polls-submit-error" hidden>Please make sure to specify the poll question type.<br/></span>
-            <span id="empty-date-error" class="red-message polls-submit-error" hidden>Please make sure release date is filled in.<br/></span>
-            <span id="response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one response option.<br/></span>
-            <span id="single-response-error" class="red-message polls-submit-error" hidden>Please make sure to add exactly one correct response option for poll type "Single reponse - single correct".<br/></span>
-            <span id="correct-response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one correct response.<br/></span>
-            <span id="empty-response-error" class="red-message polls-submit-error" hidden>Please make sure all responses are filled in.<br/></span>
-            <span id="file-size-error" class="red-message polls-submit-error" hidden>Please make sure to upload a file that does not exceed the maximum size.<br/></span>
-            <a href="{{base_url}}" class="btn btn-danger">Cancel</a>
-            <button type="submit" id="poll-form-submit" class="btn btn-primary" disabled>Add Poll</button>
-        </form>
-    {% else %}
-        <h1> Edit Poll </h1>
-
-        <form id="edit-poll-form" method="post" action="{{base_url}}/editPoll/submitEdits" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+    <form id="new-poll-form" method="post" action="{{ base_url }}{{ url_path }}" enctype="multipart/form-data">
+        {% if poll is not null %}
             <input type="hidden" name="poll_id" value="{{ poll.getId() }}"/>
-            <input type="hidden" name="response_count" id="response-count" value="{{ poll.getResponses()|length }}"/>
-            <input type="hidden" name="removed_responses" id="removed-responses" value=""/>
+        {% endif %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
 
-            <label for="poll-name" class="option-title">
-                Poll Name:
-            </label>
-            <input type="text" name="name" id="poll-name" value="{{ poll.getName() }}"/>
-            <br/> <br/>
+        <label for="poll-name" class="option-title">
+            Poll Name:
+        </label>
+        <input type="text" name="name" id="poll-name" placeholder="Enter name here..." value="{{ poll is not null ? poll.getName() }}" />
+        <br/> <br/>
 
-            <p class="option-title">Question:</p>
-            {% include "misc/MarkdownArea.twig" with {
-                "markdown_area_id" : "poll-question",
-                "markdown_area_query" : "$('#poll-question')",
-                "markdown_area_name" : "question",
-                "markdown_area_value" : poll.getQuestion(),
-                "preview_div_id" : "poll_preview_edit",
-                "onclick" : "previewPollMarkdown.call(this)",
-                "render_buttons" : true,
-                "min_height" : min_height
-            } only %}
-            <br/><br/>
+        <p class="option-title">Question:</p>
+        {% include "misc/MarkdownArea.twig" with {
+            "markdown_area_id" : "poll-question",
+            "markdown_area_query" : "$('#poll-question')",
+            "markdown_area_name" : "question",
+            "markdown_area_value" : poll is not null ? poll.getQuestion()  : "",
+            "placeholder" : "Enter question here...",
+            "preview_div_id" : "poll_preview",
+            "preview_div_name" : "poll_preview",
+            "onclick" : "previewPollMarkdown.call(this)",
+            "render_buttons" : true,
+            "min_height" : "100px"
+        } only %}
+        <br/><br/>
 
-            {% include "polls/PollType.twig" %}
+        <span class="option-title" >
+        Question Type:
+        </span>
 
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-single-response-single-correct" name="question_type" value="single-response-single-correct" onclick="changePollType()" {{ question_type == 'single-response-single-correct'? "checked" : "" }}></input>
+        <label for="poll-type-single-response-single-correct">single response - single correct</label>
+        <p class="poll-type-description"><i>Students can select only one response, and there is only one full credit answer.</i></p>
+        </div>
+
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-single-response-multiple-correct" name="question_type" value="single-response-multiple-correct" onclick="changePollType()" {{ question_type == 'single-response-multiple-correct'? "checked" : "" }}></input>
+        <label for="poll-type-single-response-multiple-correct">single response - multiple correct</label>
+        <p class="poll-type-description"><i>Students can select only one response, and there are one or more full credit answers.</i></p>
+        </div>
+
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-single-response-survey" name="question_type" value="single-response-survey" onclick="changePollType()" {{ question_type == 'single-response-survey'? "checked" : "" }}></input>
+        <label for="poll-type-single-response-survey">single response - survey</label>
+        <p class="poll-type-description"><i>Students can select only one response, and any selection is worth full credit.</i></p>
+        </div>
+
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-multiple-response-exact" name="question_type" value="multiple-response-exact" onclick="changePollType()" {{ question_type == 'multiple-response-exact'? "checked" : "" }}></input>
+        <label for="poll-type-multiple-response-exact">multiple response - exact</label>
+        <p class="poll-type-description"><i>Students can select one or more responses, and they receive full credit only if their selection exactly matches the instructor's selection.</i></p>
+        </div>
+
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-multiple-response-flexible" name="question_type" value="multiple-response-flexible" onclick="changePollType()" {{ question_type == 'multiple-response-flexible'? "checked" : "" }}></input>
+        <label for="poll-type-multiple-response-flexible">multiple response - flexible</label>
+        <p class="poll-type-description"><i>Students can select one or more responses, and they receive full credit if they select at least one of the instructor's selected responses and do not select any of the instructor's unselected responses.</i></p>
+        </div>
+
+        <div class="poll-type-option">
+        <input type="radio" id="poll-type-multiple-response-survey" name="question_type" value="multiple-response-survey" onclick="changePollType()" {{ question_type == 'multiple-response-survey'? "checked" : "" }}></input>
+        <label for="poll-type-multiple-response-survey">multiple response - survey</label>
+        <p class="poll-type-description"><i>Students can select one or more responses, and any selection is worth full credit.</i></p>
+        </div>
+
+        <br/>
+
+        <label for="image-file" class="option-title">
+            Optional Image:
+        </label>
+        <input type="file" id="image-file" name="image_file" accept="image/jpeg, image/jpg, image/gif, image/png" onchange="checkSize(this)"/>
+        <br/>
+        {% if poll is not null and poll.getImagePath() != null %}
+            Current Image: {{ poll.getImagePath() }}
             <br/>
-
-            <label for="image-file" class="option-title">
-                Optional Image:
+            <label for="keep-image">
+                Keep Image:
             </label>
-            <input type="file" id="image-file" name="image_file" accept="image/jpeg, image/jpg, image/gif, image/png" onchange="checkSize(this)"/>
-            <br />
-            {% if poll.getImagePath() != null %}
-                Current Image: {{ poll.getImagePath() }}
-                <br/>
-                <label for="keep-image">
-                    Keep Image:
-                </label>
-                <input type="checkbox" id="keep-image" name="keep_image" checked />
-            {% endif %}
-            <br/>
+            <input type="checkbox" id="keep-image" name="keep_image" checked />
+        {% endif %}
+        <br/>
 
-            <label for="poll-date" class="option-title">
-                Expected release date:
-            </label>
-            <input id="poll-date" class="poll-date" name="release_date" autocomplete="off" type="text" size="10" value="{{ poll.getReleaseDate() }}"/>
-            <br/>
-            <hr>
-            <h2> Responses: </h2>
-            <div id="responses">
-                {% set index = 0%}
-                {% set is_survey = poll.getQuestionType() == "single-response-survey" or poll.getQuestionType() == "multiple-response-survey" %}
-                {% for response in poll.getResponses() %}
-                    <div id="response_{{response}}_wrapper">
-                        <input type="hidden" class="order order-{{index}}" name="order_{{response}}" value="{{index}}"/>
-                        <input type="hidden" class="option_id" name="option_id_{{response}}" value="{{response}}"/>
-                        <input aria-label="Is correct" class="correct-box" type=checkbox name="is_correct_{{response}}" {{ poll.isCorrect(response) or is_survey ? "checked": "" }} {{ is_survey ? "style='display:none'" : "" }}>
-                        <textarea aria-label="Reponse text" class="poll_response" name="response_{{response}}"style="resize: none; min-height: 50px; max-height: 300px; height: 50px; width: calc(100% - 200px);"
-                        rows="10" cols="30">{{poll.getResponseString(response)}}</textarea>
-                        <div class="move-btn up-btn">
-                            <i class="fa fa-lg fa-chevron-up"></i>
-                        </div>
-                        <div class="move-btn down-btn">
-                            <i class="fa fa-lg fa-chevron-down"></i>
-                        </div>
-                        <div class="move-btn delete-btn">
-                            <i class="fa fa-lg fa-trash delete"></i>
-                        </div>
-                        <br/>
+        <label for="poll-date" class="option-title">
+            Expected release date:
+        </label>
+        <input
+            id="poll-date"
+            class="poll-date"
+            name="release_date"
+            autocomplete="off"
+            type="text"
+            size="10"
+            value="{{ poll is not null ? poll.getReleaseDate() | date("Y-m-d") }}"
+        />
+        <br/>
+
+        <hr>
+        <h2> Responses: </h2>
+        <div id="responses">
+        {% if poll is not null %}
+            {% set is_survey = poll.getQuestionType() == "single-response-survey" or poll.getQuestionType() == "multiple-response-survey" %}
+            {% for option in poll.getOptions() %}
+                <div class="response-container" id="response_{{option.getId()}}_wrapper">
+                    <input type="hidden" class="order order-{{option.getOrderId()}}" name="option[{{option.getId()}}][order]" value="{{option.getOrderId()}}"/>
+                    <input type="hidden" class="option_id" name="option[{{option.getId()}}][id]" value="{{option.getId()}}"/>
+                    <input aria-label="Is correct" class="correct-box" type="checkbox" name="option[{{option.getId()}}][is_correct]" {{ option.isCorrect() or is_survey ? "checked": "" }} {{ is_survey ? "style='display:none'" : "" }}>
+                    <textarea aria-label="Reponse text" class="poll_response" name="option[{{option.getId()}}][response]" style="resize: none; min-height: 50px; max-height: 300px; height: 50px; width: calc(100% - 200px);"
+                    rows="10" cols="30">{{option.getResponse()}}</textarea>
+                    <div class="move-btn up-btn">
+                        <i class="fa fa-lg fa-chevron-up"></i>
                     </div>
-                    {% set index = index + 1%}
-                {% endfor %}
-            </div>
-            <br/>
-            <button type="button" class="btn btn-primary" onclick="addResponse()">+ Add Response</button>
-            <br/> <br/>
-            <hr>
-            <span id="empty-name-error" class="red-message polls-submit-error" hidden>Please make sure poll name is filled in.<br/></span>
-            <span id="empty-question-error" class="red-message polls-submit-error" hidden>Please make sure question is filled in.<br/></span>
-            <span id="question-type-error" class="red-message polls-submit-error" hidden>Please make sure to specify the poll question type.<br/></span>
-            <span id="empty-date-error" class="red-message polls-submit-error" hidden>Please make sure release date is filled in.<br/></span>
-            <span id="response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one response option.<br/></span>
-            <span id="correct-response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one correct response.<br/></span>
-            <span id="empty-response-error" class="red-message polls-submit-error" hidden>Please make sure all responses are filled in.<br/></span>
-            <span id="single-response-error" class="red-message polls-submit-error" hidden>Please make sure to add exactly one correct response option for poll type "Single reponse - single correct".<br/></span>
-            <span id="file-size-error" class="red-message polls-submit-error" hidden>Please make sure to upload a file that does not exceed the maximum size.<br/></span>
-            <a href="{{base_url}}" class="btn btn-danger">Cancel</a>
-            <button type="submit" id="poll-form-submit" class="btn btn-primary">Submit Changes</button>
-        </form>
-    {% endif %}
+                    <div class="move-btn down-btn">
+                        <i class="fa fa-lg fa-chevron-down"></i>
+                    </div>
+                    <div class="move-btn delete-btn">
+                        <i class="fa fa-lg fa-trash delete"></i>
+                    </div>
+                    <br/>
+                </div>
+            {% endfor %}
+        {% endif %}
+        </div>
+        <br/>
+
+        <button type="button" class="btn btn-primary" onclick="addResponse()">+</button>
+        <br/> <br/>
+
+        <hr>
+        <span id="empty-name-error" class="red-message polls-submit-error" {{ poll is not null ? 'hidden' }}>Please make sure poll name is filled in.<br/></span>
+        <span id="empty-question-error" class="red-message polls-submit-error" hidden>Please make sure question is filled in.<br/></span>
+        <span id="question-type-error" class="red-message polls-submit-error" hidden>Please make sure to specify the poll question type.<br/></span>
+        <span id="empty-date-error" class="red-message polls-submit-error" hidden>Please make sure release date is filled in.<br/></span>
+        <span id="response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one response option.<br/></span>
+        <span id="single-response-error" class="red-message polls-submit-error" hidden>Please make sure to add exactly one correct response option for poll type "Single reponse - single correct".<br/></span>
+        <span id="correct-response-count-error" class="red-message polls-submit-error" hidden>Please make sure to add at least one correct response.<br/></span>
+        <span id="empty-response-error" class="red-message polls-submit-error" hidden>Please make sure all responses are filled in.<br/></span>
+        <span id="file-size-error" class="red-message polls-submit-error" hidden>Please make sure to upload a file that does not exceed the maximum size.<br/></span>
+        <a href="{{base_url}}" class="btn btn-danger">Cancel</a>
+        <button type="submit" id="poll-form-submit" class="btn btn-primary" {{ poll is null ? 'disabled' }}>{{ poll is null ? 'Add' : 'Edit' }} Poll</button>
+    </form>
 </div>
 
 
@@ -200,14 +186,12 @@
 
     function addResponse() {
         let count = $(".option_id").length;
-        let first_free_id = 0;
         let curr_max_id = -1;
-        for (let i = 0; i < $(".option_id").length; i++) {
-            if ( parseInt($($(".option_id")[i]).val()) > curr_max_id) {
-                curr_max_id = parseInt($($(".option_id")[i]).val());
-            }
+        for (let i = 0; i < count; i++) {
+            const option_id = $($(".option_id")[i]).val();
+            curr_max_id = Math.max(parseInt(option_id === "" ? i : option_id, 10), curr_max_id);
         }
-        first_free_id = curr_max_id + 1;
+        const first_free_id = curr_max_id + 1;
         let hidden_style = "";
         let is_checked = "";
         if ($("#poll-type-single-response-survey").is(":checked")
@@ -216,11 +200,11 @@
             is_checked = "checked";
         }
         $("#responses").append(`
-            <div id="response_${first_free_id}_wrapper">
-                <input type="hidden" class="order order-${count}" name="order_${first_free_id}" value="${count}"/>
-                <input type="hidden" class="option_id" name="option_id_${first_free_id}" value="${first_free_id}"/>
-                <input aria-label="Is correct" class="correct-box" type="checkbox" name="is_correct_${first_free_id}" ${hidden_style} ${is_checked}>
-                <textarea aria-label="Response text" class="poll_response" name="response_${first_free_id}" placeholder="Enter response here..." style="resize: none; min-height: 50px; max-height: 300px; height: 50px; width: calc(100% - 200px);"
+            <div class="response-container" id="response_${first_free_id}_wrapper">
+                <input type="hidden" class="order order-${count}" name="option[${first_free_id}][order]" value="${count}"/>
+                <input type="hidden" class="option_id" name="option[${first_free_id}][id]" value=""/>
+                <input aria-label="Is correct" class="correct-box" type="checkbox" name="option[${first_free_id}][is_correct]" ${hidden_style} ${is_checked}>
+                <textarea aria-label="Response text" class="poll_response" name="option[${first_free_id}][response]" placeholder="Enter response here..." style="resize: none; min-height: 50px; max-height: 300px; height: 50px; width: calc(100% - 200px);"
                 rows="10" cols="30"></textarea>
                 <div class="move-btn up-btn">
                     <i class="fa fa-lg fa-chevron-up"></i>
@@ -234,8 +218,6 @@
                 <br/>
             </div>
         `);
-        let curr_resp_count = parseInt($("#response-count").val()) + 1;
-        $("#response-count").val("" + curr_resp_count);
         setEventHandlers();
     }
 
@@ -272,7 +254,7 @@
             $("#poll-form-submit").prop("disabled", true);
             $(".polls-submit-error").hide();
             $("#empty-date-error").show();
-        } else if (parseInt($("#response-count").val()) === 0) {
+        } else if ($(".response-container").length === 0) {
             $("#poll-form-submit").prop("disabled", true);
             $(".polls-submit-error").hide();
             $("#response-count-error").show();
@@ -363,14 +345,6 @@
                             $("#response_" + i + "_wrapper").attr("id", "response_" + (i - 1) + "_wrapper");
                         }
                         my_this.parent().remove();
-                        count -= 1;
-                        $("#response-count").val("" + count);
-                        let temp = $("#removed-responses").val();
-                        if (temp !== "") {
-                            temp += ",";
-                        }
-                        temp += $(my_this.siblings(".option_id")[0]).attr("value");
-                        $("#removed-responses").val(temp);
                     }
                 },
                 error: function(e) {
