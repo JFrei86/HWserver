@@ -1,0 +1,307 @@
+{
+
+    "hide_submitted_files" : true,
+//    "hide_version_and_test_details" : true,
+    
+    "assignment_message" : "#Welcome To My Favorite Notebook Gradeable\n  \
+\n  \
+This message will appear in a blue box at the top of the page.",
+
+    "autograding" : {
+        "submission_to_compilation" : [ "*.txt", "*.cpp", "*.py" ],
+        "submission_to_runner" : [ "*.txt", "*.out", "*.py" ],
+        "submission_to_validation" : [ "*.txt", "*.png" ],
+        "work_to_details" : [ "*.txt", "*.png", "test*/*.txt", "test*/*_diff.json" ]
+    },
+    "notebook" : [
+        {
+            "type": "markdown",
+            "markdown_string": "#Instructions\n  \
+\n  \
+Here's a short list of instructions:\n  \
+* This is an open-book quiz.\n  \
+* You have 20 minutes to submit your answers.\n"
+        },
+
+        // ======================================================================================================
+        {
+            "type": "markdown",
+            "markdown_string": "#Let's do Math!"
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###What is `2 + 2`?"
+        },
+        {
+            "type": "multiple_choice",
+            "filename": "math_1.txt",
+            "testcase_ref" : "math_1",
+            "choices":[
+                {"value": "a", "description": "`2`"},
+                {"value": "b", "description": "`3`"},
+                {"value": "c", "description": "`4`"},
+                {"value": "d", "description": "`5`"},
+                {"value": "e", "description" : "*none of the above*"}
+            ]
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###What is `3 + 3`?"
+        },
+        {
+            "type": "multiple_choice",
+            "filename": "math_2.txt",
+            "testcase_ref" : "math_2",
+            "choices":[
+                {"value": "a", "description": "`3`"},
+                {"value": "b", "description": "`4`"},
+                {"value": "c", "description": "`5`"},
+                {"value": "d", "description": "`6`"},
+                {"value": "e", "description" : "*none of the above*"}
+            ]
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Select *all* statements that are true:"
+        },
+        {
+            "type": "multiple_choice",
+            "filename": "math_3.txt",
+            "testcase_ref" : "math_3",
+            "choices":[
+                {"value": "a", "description": "`1 + 1 = 2`"},
+                {"value": "b", "description": "`4 - 2 = 3`"},
+                {"value": "c", "description": "`2 * 2 = 4`"},
+                {"value": "d", "description": "`6 / 2 = 4`"}
+            ],
+            "allow_multiple": true
+        },
+
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Select *all* numbers that are powers of 2:"
+        },
+        {
+            "type": "multiple_choice",
+            "filename": "math_4.txt",
+            "testcase_ref" : "math_4",
+            "choices":[
+                {"value": "4", "description": "`4`"},
+                {"value": "24", "description": "`24`"},
+                {"value": "32", "description": "`32`"},
+                {"value": "96", "description": "`96`"},
+                {"value": "128", "description": "`128`"},
+                {"value": "524", "description": "`524`"}
+            ],
+            "randomize_order" : true,
+            "allow_multiple": true
+        },
+
+        // ======================================================================================================
+        {
+            "type": "markdown",
+            "markdown_string": "#At the Zoo!"
+        },
+        // ===================================================
+        {
+            "type": "image",
+            "image" : "panda.png",
+            "alt_text" : "Animal 1",
+            "height": 213,
+            "width": 320
+        },
+        {
+            "type": "markdown",
+            "markdown_string": "What is the type of the above animal?"
+        },
+        {
+            "type": "short_answer",
+            "filename": "animal_1.txt",
+            "testcase_ref": "animal_1"
+        },
+        // ===================================================
+        {
+            "type": "image",
+            "image" : "pig.png",
+            "alt_text" : "Animal 2",
+            "height": 219,
+            "width": 300
+        },
+        {
+            "type": "markdown",
+            "markdown_string": "What is the type of the above animal?"
+        },
+        {
+            "type": "short_answer",
+            "filename": "animal_2.txt",
+            "initial_value": "hint, I say OINK",
+            "testcase_ref": "animal_2"
+        },
+        // ===================================================
+        {
+            "type": "image",
+            "image" : "zebra.png",
+            "alt_text" : "Animal 3",
+            "height": 240,
+            "width": 286
+        },
+        {
+            "type": "markdown",
+            "markdown_string": "What is the type of the above animal?"
+        },
+        {
+            "type": "short_answer",
+            "filename": "animal_3.txt",
+            "testcase_ref": "animal_3"
+        },
+
+        // ======================================================================================================
+        {
+            "type": "markdown",
+            "markdown_string": "#Story Time!\n  \
+*Note: the problems in this section will not be auto-graded*"
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Who is your favorite author?"
+        },
+        {
+            "type": "short_answer",
+            "filename": "author.txt"
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Write a haiku:\n  \
+Wikipedia: [Haiku in English](https://en.wikipedia.org/wiki/Haiku_in_English)"
+        },
+        {
+            "type": "short_answer",
+            "filename": "haiku.txt",
+            "initial_value": "5\n7\n5",
+            "rows": 3
+        },
+
+        // ======================================================================================================
+        {
+            "type": "markdown",
+            "markdown_string": "#Hour of Code!"
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Finish the C++ code below to print all prime numbers less than 100.",
+            "testcase_ref" : "cpp_prime_compilation"
+        },
+        {
+            "testcase_ref" : "cpp_prime_testing",
+            "type": "short_answer",
+            "rows" : 10,
+            "programming_language": "cpp",
+            "filename": "cpp_codebox.cpp",
+            "initial_value": "\
+#include <iostream>\n\
+int main() {\n\
+  for (int i = 2; i < 100; i++) {\n\
+\n\
+\n\
+\n\
+    std::cout << i << std::endl;\n\
+  }\n\
+}"
+        },
+        // ===================================================
+        {
+            "type": "markdown",
+            "markdown_string": "###Finish the Python code below to print all prime numbers less than 100."
+        },
+        {
+            "testcase_ref" : "python_prime",
+            "type": "short_answer",
+            "programming_language": "python",
+            "filename": "python_codebox.py",
+            "initial_value": "\
+for i in range(2, 100):\n\
+\n\
+\n\
+\n\
+    print(i)"
+        }
+
+    ],
+    "testcases" : [ 
+
+        { "title":"Math 1", "points":3, "testcase_label":"math_1",
+          "validation":[ { "method":"diff", "actual_file":"math_1.txt", "expected_string":"c",
+                           "show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer" } ] },
+        { "title":"Math 2", "points":3, "testcase_label":"math_2",
+          "validation":[ { "method":"diff", "actual_file":"math_2.txt", "expected_string":"d",
+                           "show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer" } ] },
+        { "title":"Math 3", "points":3, "testcase_label":"math_3",
+          "validation":[ { "method":"diff", "actual_file":"math_3.txt", "expected_string":"a\nc",
+                           //"show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer" } ] },
+        { "title":"Math 4", "points":5, "testcase_label":"math_4",
+          "validation":[ {
+              "method":"diff", "comparison" : "byLine", "lineSwapOk" : true,
+              "actual_file":"math_4.txt", "expected_string":"4\n32\n128",
+              "show_expected":"never","show_actual":"never"
+              //,
+              // FIXME, THIS ALWAYS PRINTS
+              //"failure_message":"Incorrect Answer"
+          } ] },
+
+        { "title":"Animal 1", "points":2, "testcase_label":"animal_1",
+          "validation":[ { "method":"diff", "actual_file":"animal_1.txt", "expected_string":"panda",
+                           "show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer (note: make sure your answer is lowercase)" } ] },
+        { "title":"Animal 2", "points":2, "testcase_label":"animal_2",
+          "validation":[ { "method":"diff", "actual_file":"animal_2.txt", "expected_string":"pig",
+                           "show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer (note: make sure your answer is lowercase)" } ] },
+        { "title":"Animal 3", "points":2, "testcase_label":"animal_3",
+          "validation":[ { "method":"diff", "actual_file":"animal_3.txt", "expected_string":"zebra",
+                           //"show_expected":"never","show_actual":"never",
+                           "failure_message":"Incorrect Answer (note: make sure your answer is lowercase)" } ] },
+
+        { "title":"C++ Code for Primes -- Compilation", "testcase_label":"prime_cpp_compilation",
+          "type" : "Compilation",
+          "command" : "clang++ -Wall -o cpp_prime.out cpp_codebox.cpp",
+          "points":1,
+          "executable_name" : "cpp_prime.out"
+        },
+        { "title":"C++ Code for Primes -- Testing", "testcase_label":"prime_cpp_testing",
+          "points":4,
+          "command" : "./cpp_prime.out",
+          "validation":[ { "method":"diff", "actual_file":"STDOUT.txt", "expected_file":"prime_answer.txt",
+                           "show_message":"on_failure", "deduction": 1.0, "failure_message":"Incorrect Answer/Output"
+                         },
+                         {
+                             "actual_file": "STDERR.txt","deduction": 0.5,"description": "Standard Error (STDERR.txt)",
+                             "method": "warnIfNotEmpty"
+                         }
+                       ]
+        },
+
+        { "title":"Python Code for Primes", "testcase_label":"prime_python",
+          "points":5,
+          "command" : "python3 ./python_codebox.py",
+          "validation":[ { "method":"diff", "actual_file":"STDOUT.txt", "expected_file":"2\n3\n5\n7\n11\n13\n17\n19\n23\n29\n31\n37\n41\n43\n47\n53\n59\n61\n67\n71\n73\n79\n83\n89\n97",
+                           "show_message":"on_failure", "deduction" : 1.0, "failure_message":"Incorrect Answer/Output"
+                         },
+                         {
+                             "actual_file": "STDERR.txt","deduction": 0.0,"description": "Standard Error (STDERR.txt)",
+                             "method": "warnIfNotEmpty"
+                         }
+                       ]
+        }
+        
+    ]
+}
