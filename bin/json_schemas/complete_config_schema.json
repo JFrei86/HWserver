@@ -1154,6 +1154,10 @@
             }
           ]
         },
+        "expected_string" : {
+          "description" : "The professor specified an expected output string.",
+          "type" : "string"
+        },
         "deduction" : {
           "description" : "The amount of points that this validation step is worth, scaled between 0 and 1.",
           "type" : "number",

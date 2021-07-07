@@ -148,6 +148,8 @@ double ValidateAutoCheck(const TestCase &my_testcase, int which_autocheck, nlohm
       bool studentFileExists, studentFileEmpty;
       bool expectedFileExists=false, expectedFileEmpty=false;
       fileStatus(actual_file, studentFileExists,studentFileEmpty);
+      std::string expected_file;
+      std::string expected_string;
       std::string expected;
       if (studentFileExists) {
         if (show_actual) {
@@ -158,10 +160,26 @@ double ValidateAutoCheck(const TestCase &my_testcase, int which_autocheck, nlohm
             autocheck_j["results_public"] = true;
           }
         }
-        expected = tcg.value("expected_file", "");
+        expected_file = tcg.value("expected_file", "");
+        expected_string = tcg.value("expected_string", "");
+        assert(!(expected_file != "" && expected_string != ""));
+        if (expected_file != "") {
+          expected = expected_file;
+        } else if (expected_string != "") {
+          //if expected file doesn't exist, use actual_file name to get the name of the expected string output file
+          //ex: actual_file = math_1.txt, expected = expected_string_math_1.txt
+          expected = "expected_string_" + actual_file.substr(actual_file.find('/')+1);
+        }
+        std::cout << "expected: " << expected << std::endl;
+        std::cout << "expected_file: " << expected_file << std::endl;
+        std::cout << "expected_string: " << expected_string << std::endl;
+        std::cout << "actual_file: " << actual_file << std::endl;
+
+
         if (expected != "") {
           std::string expectedWithFolder = getOutputContainingFolderPath(my_testcase, expected) + expected;
           fileStatus(expectedWithFolder, expectedFileExists,expectedFileEmpty);
+          std::cout << "expectedFileExists: " << expectedFileExists << std::endl;
           if (!expectedFileExists) {
             BROKEN_CONFIG_ERROR_MESSAGE = "ERROR!  Expected File '" + expected + "' does not exist";
             std::cout << BROKEN_CONFIG_ERROR_MESSAGE << std::endl;
@@ -175,7 +193,9 @@ double ValidateAutoCheck(const TestCase &my_testcase, int which_autocheck, nlohm
             std::stringstream expected_path;
             std::string id = hw_id;
             std::string expected_out_dir = getPathForOutputFile(my_testcase, expected, id);
+            std::cout << "expected_out_dir: " << expected_out_dir << std::endl;
             expected_path << expected_out_dir << expected;
+            std::cout << "expected_path: " << expected_path.str() << std::endl;
             if (show_expected) {
              autocheck_j["expected_file"] = expected_path.str();
             }

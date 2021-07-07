@@ -11,6 +11,7 @@
 #include <sys/shm.h>
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 
 #include "TestCase.h"
 #include "dispatch.h"
@@ -188,8 +189,30 @@ bool openStudentFile(const TestCase &tc, const nlohmann::json &j, std::string &s
 bool openExpectedFile(const TestCase &tc, const nlohmann::json &j, std::string &expected_file_contents,
                       std::vector<std::pair<TEST_RESULTS_MESSAGE_TYPE, std::string> > &messages) {
 
-  std::string filename = j.value("expected_file","");
-  filename = getOutputContainingFolderPath(tc, filename) + filename;
+  std::cout << "opening expected file..." << std::endl;
+  std::string expected_file = j.value("expected_file", "");
+  std::string expected_string = j.value("expected_string", "");
+  std::string actual_file = j.value("actual_file", "");
+
+  std::cout << "expected_file: " << expected_file << std::endl;
+  std::cout << "expected_string: " << expected_string << std::endl;
+  std::cout << "actual_file: " << expected_string << std::endl;
+  assert(!(expected_file != "" && expected_string != ""));
+
+  std::string filename;
+  if (expected_file == "") {
+    //if the expected file doesn't exist, write expected_string to it (but where?)
+    //use actual_file name to get the name of the expected string output file
+    //ex: actual_file = math_1.txt, expected = expected_string_math_1.txt
+    expected_file = "expected_string_" + actual_file.substr(actual_file.find('/')+1);
+    filename = "test_output/" + expected_file;
+    std::ofstream expected_file_stream(filename);
+    expected_file_stream << expected_string;
+    expected_file_stream.close();
+  } else {
+    filename = getOutputContainingFolderPath(tc, expected_file) + expected_file;
+  }
+
   if (filename == "") {
     messages.push_back(std::make_pair(MESSAGE_FAILURE,"ERROR!  EXPECTED FILENAME MISSING"));
     return false;

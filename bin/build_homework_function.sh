@@ -52,6 +52,12 @@ function fix_permissions {
     fi
     if [ -d $hw_build_path/test_output/ ]; then
 	rsync -ruz --delete $hw_build_path/test_output/  $course_dir/test_output/$assignment/
+    else
+        # if there is no test_output provided in the config, create an empty directory to give support for expected_string output
+        if [ -d $course_dir/test_output/$assignment ]; then
+            rm -rf $course_dir/test_output/$assignment
+        fi
+        mkdir $course_dir/test_output/$assignment
     fi
     if [ -d $hw_build_path/custom_validation_code/ ]; then
 	rsync -ruz --delete $hw_build_path/custom_validation_code/    $course_dir/custom_validation_code/$assignment/

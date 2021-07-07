@@ -1024,6 +1024,14 @@ void InflateTestcase(nlohmann::json &single_testcase, nlohmann::json &whole_conf
           assert (validShowValue(*itr2));
         }
       }
+      if (grader.find("expected_string") != grader.end()) {
+        itr2 = grader.find("show_expected");
+        if (itr2 == grader.end()) {
+          grader["show_expected"] = "always";
+        } else {
+          assert (validShowValue(*itr2));
+        }
+      }
     }
   }
 }
