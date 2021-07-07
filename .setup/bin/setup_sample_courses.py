@@ -1089,7 +1089,7 @@ class Course(object):
             gradeable_teams_table.c['team_id'] == unique_team_id)
             res = self.conn.execute(team_in_other_gradeable)
             num = res.rowcount
-            while num is not 0:
+            while num != 0:
                 ucounter+=1
                 unique_team_id=str(ucounter).zfill(5)+"_"+user.get_detail(self.code, "id")
                 team_in_other_gradeable = select([gradeable_teams_table]).where(
@@ -1454,7 +1454,7 @@ class Gradeable(object):
             self.title = self.id.replace("_", " ").title()
 
         if 'g_grader_assignment_method' in gradeable:
-            self.grade_by_registration = gradeable['g_grader_assignment_method'] is 1
+            self.grade_by_registration = gradeable['g_grader_assignment_method'] == 1
             self.grader_assignment_method = gradeable['g_grader_assignment_method']
 
         if 'grading_rotating' in gradeable:
@@ -1544,7 +1544,7 @@ class Gradeable(object):
                 component['gc_is_text'] = False
             i-=1
             self.components.append(Component(component, i+1))
-
+        
     def create(self, conn, gradeable_table, electronic_table, peer_assign, reg_table, component_table, mark_table):
         conn.execute(gradeable_table.insert(), g_id=self.id, g_title=self.title,
                      g_instructions_url=self.instructions_url,
@@ -1564,16 +1564,39 @@ class Gradeable(object):
             conn.execute(reg_table.insert(), g_id=self.id, user_id=rotate['user_id'],
                          sections_rotating=rotate['section_rotating_id'])
 
-
-
         if self.peer_grading == True:
-            with open(os.path.join(SETUP_DATA_PATH, 'random', 'graders.txt')) as graders, \
-            open(os.path.join(SETUP_DATA_PATH, 'random', 'students.txt')) as students:
-                graders = graders.read().strip().split()
+            with open(os.path.join(SETUP_DATA_PATH, 'random_users.txt')) as students:
                 students = students.read().strip().split()
-                length=len(graders)
-                for i in range(length):
-                    conn.execute(peer_assign.insert(), g_id=self.id, grader_id=graders[i], user_id=students[i])
+                random.shuffle(students)
+                no_to_grade = random.randint(1, len(students))
+                max_offset = len(students)
+                final_grading_info = []
+                n_array_peers = []
+                n_array_peers.append([students])
+                offset_array = []
+                temp_offset = []
+                for i in range(1,max_offset+1):
+                    temp_offset.append(i)
+                for i in range (no_to_grade+1):
+                    random_offset = random.choice(temp_offset)
+                    offset_array.append(random_offset)
+                    temp_offset.remove(random_offset)
+                for i in range(len(offset_array)):
+                    temp_arr=[]
+                    for x in range(len(students)):
+                        to_add = students[(x+offset_array[i])%(len(students)-1)]
+                        if(to_add not in temp_arr):
+                            temp_arr.append(to_add)
+                    n_array_peers.append([temp_arr])
+                for i in range(len(n_array_peers[0])):
+                    temp = []
+                    for j in range(1, len(n_array_peers)):
+                        temp.append(n_array_peers[j][i])
+                    final_grading_info.append([n_array_peers[0][i],temp])
+                for i in range(len(final_grading_info)):
+                    for j in range(len(final_grading_info[0][1])):
+                        for k in range(len(final_grading_info[i][1][j])):
+                            conn.execute(peer_assign.insert(), g_id=self.id, grader_id=final_grading_info[i][0][j], user_id=final_grading_info[i][1][j][k])
             
         if self.type == 0:
             conn.execute(electronic_table.insert(), g_id=self.id,
