@@ -36,6 +36,20 @@ class TestHandleMigration(unittest.TestCase):
             database.DynamicBase.metadata.create_all(database.engine)
         return database
 
+    def create_course_table(self, database):
+        database.execute("""
+            CREATE TABLE courses (
+                semester character varying(255) NOT NULL,
+                course character varying(255) NOT NULL,
+                status smallint DEFAULT 1 NOT NULL
+            );
+            """)
+
+    def add_course(self, database, semester, course, status=1):
+        database.execute(
+            f"INSERT INTO courses VALUES ('{semester}', '{course}', {status})"
+        )
+
     def test_no_course_dir(self):
         args = Namespace()
         args.environments = ['course']
@@ -85,9 +99,9 @@ class TestHandleMigration(unittest.TestCase):
         )
 
     def test_migration_no_db_course(self):
-
-        # FIXME: warning not exception on missing db
-        return
+        database = self.create_database('master')
+        self.create_course_table(database)
+        self.add_course(database, 'f19', 'csci1100')
 
         args = Namespace()
         args.environments = ['course']
@@ -100,7 +114,7 @@ class TestHandleMigration(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as context, \
                 patch.object(migrator.db, 'Database') as mock_class:
-            mock_class.side_effect = OperationalError('test', None, None)
+            mock_class.side_effect = [database, OperationalError('test', None, None)]
             main.handle_migration(args)
         self.assertEqual(
             "Submitty Database Migration Error:  Database does not exist for semester=f19 course=csci1100",
@@ -175,6 +189,10 @@ class TestHandleMigration(unittest.TestCase):
     def test_migration_course(self, mock_method):
         args = Namespace()
         self.setup_test('course')
+        database_0 = self.create_database('master')
+        self.create_course_table(database_0)
+        self.add_course(database_0, 'f19', 'csci1100')
+
         database = self.create_database('course')
         args.environments = ['course']
         args.choose_course = None
@@ -185,10 +203,10 @@ class TestHandleMigration(unittest.TestCase):
         Path(self.dir, 'courses', 'f19', 'csci1100').mkdir(parents=True)
 
         with patch.object(migrator.db, 'Database') as mock_class:
-            mock_class.side_effect = [database]
+            mock_class.side_effect = [database_0, database]
             main.handle_migration(args)
         self.assertTrue(mock_class.called)
-        self.assertEqual(1, mock_class.call_count)
+        self.assertEqual(2, mock_class.call_count)
         self.assertTrue(
             ({'dbname': 'submitty_f19_csci1100'}, 'course'),
             mock_class.call_args[0]
@@ -213,6 +231,13 @@ class TestHandleMigration(unittest.TestCase):
     def test_migration_multiple_courses(self, mock_method):
         args = Namespace()
         self.setup_test('course')
+        database_0 = self.create_database('master')
+        self.create_course_table(database_0)
+        self.add_course(database_0, 'f17', 'csci1100', 3)
+        self.add_course(database_0, 'f18', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1200', 2)
+
         database_1 = self.create_database('course')
         database_2 = self.create_database('course')
         database_3 = self.create_database('course')
@@ -222,14 +247,15 @@ class TestHandleMigration(unittest.TestCase):
         args.config.database = dict()
         args.config.submitty = dict()
         args.config.submitty['submitty_data_dir'] = Path(self.dir)
+        Path(self.dir, 'courses', 'f16', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f18', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f19', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f19', 'csci1200').mkdir(parents=True)
         with patch.object(migrator.db, 'Database') as mock_class:
-            mock_class.side_effect = [database_1, database_2, database_3]
+            mock_class.side_effect = [database_0, database_1, database_2, database_3]
             main.handle_migration(args)
         self.assertTrue(mock_class.called)
-        self.assertEqual(3, mock_class.call_count)
+        self.assertEqual(4, mock_class.call_count)
         self.assertTrue(
             ({'dbname': 'submitty_f18_csci1100'}, 'course'),
             mock_class.call_args_list[0][0]
@@ -294,6 +320,12 @@ class TestHandleMigration(unittest.TestCase):
     def test_migration_choose_courses(self, mock_method):
         args = Namespace()
         self.setup_test('course')
+        database_0 = self.create_database('master')
+        self.create_course_table(database_0)
+        self.add_course(database_0, 'f18', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1200')
+
         database_1 = self.create_database('course')
         args.environments = ['course']
         args.choose_course = ['f19', 'csci1100']
@@ -305,10 +337,10 @@ class TestHandleMigration(unittest.TestCase):
         Path(self.dir, 'courses', 'f19', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f19', 'csci1200').mkdir(parents=True)
         with patch.object(migrator.db, 'Database') as mock_class:
-            mock_class.side_effect = [database_1]
+            mock_class.side_effect = [database_0, database_1]
             main.handle_migration(args)
         self.assertTrue(mock_class.called)
-        self.assertEqual(1, mock_class.call_count)
+        self.assertEqual(2, mock_class.call_count)
         self.assertTrue(
             ({'dbname': 'submitty_f19_csci1100'}, 'course'),
             mock_class.call_args_list[0][0]
@@ -331,11 +363,18 @@ class TestHandleMigration(unittest.TestCase):
         self.assertEqual(expected_args.course, 'csci1100')
         self.assertFalse(database_1.open)
 
-
     @patch('migrator.main.migrate_environment')
     def test_migration_multiple_courses_missing_migration(self, mock_method):
         args = Namespace()
         self.setup_test('course')
+
+        database_0 = self.create_database('master')
+        self.create_course_table(database_0)
+        self.add_course(database_0, 'f17', 'csci1100', 3)
+        self.add_course(database_0, 'f18', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1100')
+        self.add_course(database_0, 'f19', 'csci1200', 2)
+
         database_1 = self.create_database('course')
         database_2 = self.create_database('course')
         database_3 = self.create_database('course')
@@ -346,6 +385,7 @@ class TestHandleMigration(unittest.TestCase):
         args.config.submitty = dict()
         args.config.submitty['submitty_data_dir'] = Path(self.dir)
 
+        Path(self.dir, 'courses', 'f16', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f18', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f19', 'csci1100').mkdir(parents=True)
         Path(self.dir, 'courses', 'f19', 'csci1200').mkdir(parents=True)
@@ -356,11 +396,11 @@ class TestHandleMigration(unittest.TestCase):
         self.assertTrue(missing_migration.exists())
 
         with patch.object(migrator.db, 'Database') as mock_class:
-            mock_class.side_effect = [database_1, database_2, database_3]
+            mock_class.side_effect = [database_0, database_1, database_2, database_3]
             main.handle_migration(args)
         self.assertFalse(missing_migration.exists())
         self.assertTrue(mock_class.called)
-        self.assertEqual(3, mock_class.call_count)
+        self.assertEqual(4, mock_class.call_count)
         self.assertTrue(
             ({'dbname': 'submitty_f18_csci1100'}, 'course'),
             mock_class.call_args_list[0][0]
@@ -375,3 +415,57 @@ class TestHandleMigration(unittest.TestCase):
         )
         self.assertTrue(mock_method.called)
         self.assertEqual(3, mock_method.call_count)
+
+    @patch('migrator.main.migrate_environment')
+    def test_migration_course_missing_directory(self, mock_method):
+        args = Namespace()
+        self.setup_test('course')
+
+        database_0 = self.create_database('master')
+        self.create_course_table(database_0)
+        self.add_course(database_0, 'f18', 'csci1100')
+
+        database_1 = self.create_database('course')
+        args.environments = ['course']
+        args.choose_course = None
+        args.config = SimpleNamespace()
+        args.config.database = dict()
+        args.config.submitty = dict()
+        args.config.submitty['submitty_data_dir'] = Path(self.dir)
+
+        Path(self.dir, 'courses').mkdir(parents=True)
+
+        with self.assertRaises(SystemExit) as context, \
+                patch.object(migrator.db, 'Database') as mock_class:
+            mock_class.side_effect = [database_0, database_1]
+            main.handle_migration(args)
+
+        self.assertEqual(
+            "Migrator Error:  Could not find directory for f18 csci1100",
+            str(context.exception)
+        )
+
+    @patch('migrator.main.migrate_environment')
+    def test_migration_course_missing_master_db(self, mock_method):
+        args = Namespace()
+        self.setup_test('course')
+
+        database_1 = self.create_database('course')
+        args.environments = ['course']
+        args.choose_course = None
+        args.config = SimpleNamespace()
+        args.config.database = dict()
+        args.config.submitty = dict()
+        args.config.submitty['submitty_data_dir'] = Path(self.dir)
+
+        Path(self.dir, 'courses').mkdir(parents=True)
+
+        with self.assertRaises(SystemExit) as context, \
+                patch.object(migrator.db, 'Database') as mock_class:
+            mock_class.side_effect = [OperationalError('test', None, None), database_1]
+            main.handle_migration(args)
+
+        self.assertEqual(
+            "Submitty Database Migration Error:  Database does not exist for master for courses",
+            str(context.exception)
+        )
