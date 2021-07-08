@@ -50,12 +50,11 @@ class BaseTestCase(unittest.TestCase):
         """ :type driver: webdriver.Chrome """
         self.options = webdriver.ChromeOptions()
         self.options.add_argument('--no-sandbox')
-        self.options.add_argument('--headless')
+        #self.options.add_argument('--headless')
         self.options.add_argument("--disable-extensions")
         self.options.add_argument('--hide-scrollbars')
         self.options.add_argument('--disable-gpu')
         self.options.add_argument('--no-proxy-server')
-
         self.download_dir = tempfile.mkdtemp(prefix="vagrant-submitty")
         # https://stackoverflow.com/a/26916386/214063
         profile = {

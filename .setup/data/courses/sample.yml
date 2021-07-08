@@ -550,16 +550,16 @@ gradeables:
   eg_team_assignment: true
   eg_max_team_size: 3
   g_ta_view_start_date: 1970-01-01 23:59:59
-  g_title: Closed Peer Team Homework
+  g_title: Open Only Peer Team Homework
   gradeable_config: python_simple_homework
   g_bucket: homework
 
-- g_id: closed_peer_team_homework
+- g_id: grading_pdf_peer_team_homework
   eg_peer_grading: true
   components:
   - gc_lower_clamp: 0
-    gc_default: 2
     gc_is_peer: true
+    gc_default: 2
     gc_max_value: 2
     gc_upper_clamp: 2
     gc_title: Read Me
@@ -602,6 +602,7 @@ gradeables:
         gcm_points: -1
   - gc_lower_clamp: 0
     gc_default: 0
+    gc_is_peer: true
     gc_max_value: 0
     gc_upper_clamp: 5
     gc_title: Extra Credit
@@ -616,15 +617,16 @@ gradeables:
   eg_submission_open_date: 1971-01-01 23:59:59
   g_grade_due_date: 9998-12-31 23:59:59
   g_grade_released_date: 9998-12-31 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
   eg_grade_inquiry_start_date: 9999-01-01 23:59:59
   eg_grade_inquiry_due_date: 9999-01-06 23:59:59
-  g_grade_start_date: 9997-12-31 23:59:59
   eg_team_assignment: true
   eg_max_team_size: 3
   g_ta_view_start_date: 1970-01-01 23:59:59
-  g_title: Closed Peer Team Homework
-  gradeable_config: cpp_hidden_tests
+  g_title: Open PDF Peer Team Homework
+  gradeable_config: pdf_word_count
   g_bucket: homework
+  g_grader_assignment_method: 1
 
 - g_id: grading_pdf_peer_homework
   eg_peer_grading: true
@@ -689,8 +691,8 @@ gradeables:
   eg_submission_open_date: 1971-01-01 23:59:59
   g_grade_due_date: 1974-01-01 23:59:59
   g_grade_released_date: 1974-01-01 23:59:59
-  eg_grade_inquiry_start_date: 1974-01-08 23:59:59
-  eg_grade_inquiry_due_date: 1974-01-13 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
   g_grade_start_date: 1973-01-01 23:59:59
   g_ta_view_start_date: 1970-01-01 23:59:59
   g_title: Released Peer PDF Homework
