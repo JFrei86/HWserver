@@ -21,6 +21,7 @@ from shutil import copyfile
 import glob
 import grp
 import hashlib
+import numpy
 import json
 import os
 import pwd
@@ -1563,17 +1564,35 @@ class Gradeable(object):
         for rotate in self.grading_rotating:
             conn.execute(reg_table.insert(), g_id=self.id, user_id=rotate['user_id'],
                          sections_rotating=rotate['section_rotating_id'])
-
-
-
+            
         if self.peer_grading == True:
-            with open(os.path.join(SETUP_DATA_PATH, 'random', 'graders.txt')) as graders, \
-            open(os.path.join(SETUP_DATA_PATH, 'random', 'students.txt')) as students:
-                graders = graders.read().strip().split()
+            with open(os.path.join(SETUP_DATA_PATH, 'random_users.txt')) as students:
                 students = students.read().strip().split()
-                length=len(graders)
-                for i in range(length):
-                    conn.execute(peer_assign.insert(), g_id=self.id, grader_id=graders[i], user_id=students[i])
+                random.shuffle(students)
+                no_to_grade = random.randint(1, len(students))
+                max_offset = len(students)
+                final_grading_info = []
+                n_array_peers = []
+                n_array_peers.append([students])
+                offset_array = []
+                temp_offset = []
+                for i in range(1,max_offset+1):
+                    temp_offset.append(i)
+                for i in range (no_to_grade+1):
+                    random_offset = random.choice(temp_offset)
+                    offset_array.append(random_offset)
+                    temp_offset.remove(random_offset)
+                for i in range(len(offset_array)+1):
+                    temp_arr = numpy.roll(students,offset_array[i])
+                    n_array_peers.append([temp_arr])
+                for i in range(len(n_array_peers[0])+1):
+                    temp = []
+                    for j in range(1, len(n_array_peers)+1):
+                        temp.append(n_array_peers[j][i])
+                    final_grading_info.append([n_array_peers[0][i],temp])    
+                for i in range(len(final_grading_info)+1):
+                    for j in range(len(final_grading_info[0][1])):
+                        conn.execute(peer_assign.insert(), g_id=self.id, grader_id=final_grading_info[i][0], user_id=final_grading_info[i][1][j])
             
         if self.type == 0:
             conn.execute(electronic_table.insert(), g_id=self.id,
