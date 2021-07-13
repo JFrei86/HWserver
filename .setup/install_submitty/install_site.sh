@@ -43,6 +43,11 @@ echo -e "Copy the submission website"
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${THIS_DIR}/../bin/versions.sh
 
+VAGRANT=0
+if [ -d ${THIS_DIR}/../../.vagrant ]; then
+    VAGRANT=1
+fi
+
 # This is run under /usr/local/submitty/GIT_CHECKOUT/Submitty/.setup/bin/
 CONF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../../../config
 SUBMITTY_REPOSITORY=$(jq -r '.submitty_repository' ${CONF_DIR}/submitty.json)
@@ -61,7 +66,7 @@ mv /tmp/index.html ${SUBMITTY_INSTALL_DIR}/site/public
 # copy the website from the repo. We don't need the tests directory in production and then
 # we don't want vendor as if it exists, it was generated locally for testing purposes, so
 # we don't want it
-result=$(rsync -rtz -i --exclude 'tests' --exclude '/site/cache' --exclude '/site/vendor' --exclude 'site/node_modules/' --exclude '/site/phpstan.neon' --exclude '/site/phpstan-baseline.neon' --exclude '/site/.eslintrc.json' --exclude '/site/.eslintignore' --exclude '/site/cypress/' --exclude '/site/cypress.json' --exclude '/site/jest.config.js' --exclude '/site/.babelrc.json' ${SUBMITTY_REPOSITORY}/site ${SUBMITTY_INSTALL_DIR})
+result=$(rsync -rtz -i --exclude 'tests' --exclude '/site/cache' --exclude '/site/vendor' --exclude 'site/node_modules/' --exclude '/site/phpstan.neon' --exclude '/site/phpstan-baseline.neon' --exclude '/site/.eslintrc.json' --exclude '/site/.eslintignore' --exclude '/site/cypress/' --exclude '/site/cypress.json' --exclude '/site/jest.config.js' --exclude '/site/.babelrc.json' --exclude '/site/.stylelintrc.json' ${SUBMITTY_REPOSITORY}/site ${SUBMITTY_INSTALL_DIR})
 
 # check for either of the dependency folders, and if they do not exist, pretend like
 # their respective json file was edited. Composer needs the folder to exist to even
@@ -125,7 +130,7 @@ for entry in "${result_array[@]}"; do
     fi
 done
 
-if echo "${result}" | grep -E -q "composer\.(json|lock)"; then
+if echo "${result}" | grep -E -q "composer\.(json|lock)" || [ ${VAGRANT} == 1 ]; then
     # install composer dependencies and generate classmap
     su - ${PHP_USER} -c "composer install -d \"${SUBMITTY_INSTALL_DIR}/site\" --no-dev --prefer-dist --optimize-autoloader --no-suggest"
     chown -R ${PHP_USER}:${PHP_USER} ${SUBMITTY_INSTALL_DIR}/site/vendor
