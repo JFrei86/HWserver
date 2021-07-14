@@ -218,7 +218,6 @@ def get_testcases(config, semester, course, g_id, notebook_data):
             testcase_specs += item_dict['testcases']
 
     testcases = []
-    print(json.dumps(testcase_specs, indent=4))
     for testcase in testcase_specs:
         testcases.append({
                 'hidden': testcase.get('hidden', False),
