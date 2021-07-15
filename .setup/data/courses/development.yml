@@ -376,6 +376,48 @@ gradeables:
   eg_grade_inquiry_due_date: +1015 days
   eg_max_random_submissions: 0
 
+- gradeable_config: notebook_custom_file
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 5
+    gc_max_value: 5
+    gc_upper_clamp: 5
+    gc_title: Question 1
+    marks:
+      - gcm_note: Full Credit
+        gcm_points : 0
+      - gcm_note: Question 1 Mark 1
+        gcm_points : -5
+  g_ta_view_start_date: -2 days
+  eg_submission_open_date: -1 days
+  eg_submission_due_date: +1000 days
+  g_grade_start_date: +1005 days
+  g_grade_due_date: +1010 days
+  g_grade_released_date: +1010 days
+  eg_regrade_request_date: +1015 days
+  eg_max_random_submissions: 0
+
+- gradeable_config: notebook_expected_string
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 5
+    gc_max_value: 5
+    gc_upper_clamp: 5
+    gc_title: Question 1
+    marks:
+      - gcm_note: Full Credit
+        gcm_points : 0
+      - gcm_note: Question 1 Mark 1
+        gcm_points : -5
+  g_ta_view_start_date: -2 days
+  eg_submission_open_date: -1 days
+  eg_submission_due_date: +1000 days
+  g_grade_start_date: +1005 days
+  g_grade_due_date: +1010 days
+  g_grade_released_date: +1010 days
+  eg_regrade_request_date: +1015 days
+  eg_max_random_submissions: 0
+
 - gradeable_config: notebook_filesubmission
   components:
   - gc_lower_clamp: 0

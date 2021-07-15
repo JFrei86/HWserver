@@ -1,0 +1,136 @@
+{
+
+    "assignment_message" : "# Sample Notebook with Custom File Downloads"
+
+    
+    "autograding" : {
+        "submission_to_compilation" : [ "*.txt", "*.cpp", "*.py" ],
+        "submission_to_runner" : [ "*.txt", "*.out", "*.py" ],
+        "submission_to_validation" : [ "*.txt", "*.png" ],
+        "work_to_details" : [ "*.txt", "*.png", "test*/*.txt", "test*/*_diff.json" ]
+    },
+
+
+    "item_pool":
+    [
+        // ===================================================
+        { "item_name" : "math_1",
+          "notebook" : [
+              {
+                  "type": "markdown",
+                  "markdown_string": "###What is `2 + 2`?"
+              },
+              {
+                  "type": "multiple_choice",
+                  "filename": "math_1.txt",
+                  "testcase_ref" : "math_1",
+                  "choices":[
+                      {"value": "a", "description": "`2`"},
+                      {"value": "b", "description": "`3`"},
+                      {"value": "c", "description": "`4`"},
+                      {"value": "d", "description": "`5`"},
+                      {"value": "e", "description" : "*none of the above*"}
+                  ]
+              }
+          ],
+          "testcases" : [
+              { "title":"Math 1", "testcase_label":"math_1",
+                "validation":[ { "method":"diff", "actual_file":"math_1.txt", "expected_file":"math_1_answer.txt",
+                                 "show_expected":"never","show_actual":"never",
+                                 "failure_message":"Incorrect Answer" } ] }
+          ]
+        },
+        // ===================================================
+        { "item_name" : "math_2",
+          "notebook" : [
+              {
+                  "type": "markdown",
+                  "markdown_string": "###What is `3 + 3`?"
+              },
+              {
+                  "type": "multiple_choice",
+                  "filename": "math_2.txt",
+                  "testcase_ref" : "math_2",
+                  "choices":[
+                      {"value": "a", "description": "`3`"},
+                      {"value": "b", "description": "`4`"},
+                      {"value": "c", "description": "`5`"},
+                      {"value": "d", "description": "`6`"},
+                      {"value": "e", "description" : "*none of the above*"}
+                  ]
+              }
+          ],
+          "testcases" : [
+              { "title":"Math 2", "testcase_label":"math_2",
+                "validation":[ { "method":"diff", "actual_file":"math_2.txt", "expected_file":"math_2_answer.txt",
+                                 "show_expected":"never","show_actual":"never",
+                                 "failure_message":"Incorrect Answer" } ] }
+          ]
+        },
+        // ===================================================
+        { "item_name" : "math_3",
+          "notebook" : [
+              {
+                  "type": "markdown",
+                  "markdown_string": "###Select *all* statements that are true:"
+              },
+              {
+                  "type": "multiple_choice",
+                  "filename": "math_3.txt",
+                  "testcase_ref" : "math_3",
+                  "choices":[
+                      {"value": "a", "description": "`1 + 1 = 2`"},
+                      {"value": "b", "description": "`4 - 2 = 3`"},
+                      {"value": "c", "description": "`2 * 2 = 4`"},
+                      {"value": "d", "description": "`6 / 2 = 4`"}
+                  ],
+                  "allow_multiple": true
+              }
+          ],
+          "testcases" : [
+              { "title":"Math 3", "testcase_label":"math_3",
+                "validation":[ { "method":"diff", "actual_file":"math_3.txt", "expected_file":"math_3_answer.txt",
+                                 "show_expected":"never","show_actual":"never",
+                                 "failure_message":"Incorrect Answer" } ] }
+          ]
+        }
+    ],
+    // ===================================================              
+
+    "notebook" : [
+        {
+            "type": "markdown",
+            "markdown_string": "#File Downloads"
+        },        
+        {
+            "type": "markdown",
+            "markdown_string": "Download your custom final exam problem packet:"
+        },
+        {
+            "type": "file",
+            "filename": "finalexam_<USERID>.pdf"
+        },
+        {
+            "type": "markdown",
+            "markdown_string": "Here is your assigned dataset file:"
+        },
+        {
+            "type": "file",
+            "filename_pool": [ "dataset_123.zip", "dataset_456.zip", "dataset_789.zip" ]
+        },
+
+        // ======================================================================================================
+        {
+            "type": "markdown",
+            "markdown_string": "#Let's do Math!"
+        },
+        {
+            "type" : "item",
+            "item_label" : "Math Problem",
+            "from_pool" : ["math_1", "math_2", "math_3"],
+            "points" : 3
+        }
+    ],
+    "testcases" : [ 
+    ]
+}
