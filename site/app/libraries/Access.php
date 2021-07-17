@@ -766,6 +766,7 @@ class Access {
                     }
                     $hidden_files = $args["gradeable"]->getHiddenFiles();
                     foreach (explode(",", $hidden_files) as $file_regex) {
+                        $file_regex = trim($file_regex);
                         if (fnmatch($file_regex, $subpart_values[count($subpart_values) - 1]) && $this->core->getUser()->getGroup() > 3) {
                             return false;
                         }
