@@ -116,6 +116,12 @@ class SubmissionController extends AbstractController {
             return $verify_permissions;
         }
 
+        if ($gradeable->isLocked($this->core->getUser()->getId())) {
+            $this->core->addErrorMessage('You have not unlocked this gradeable yet');
+            $this->core->redirect($this->core->buildCourseUrl());
+            return ['error' => true, 'message' => 'You have not completed the pre-requisite gradeable'];
+        }
+
         // Attempt to put the version number to be in bounds of the gradeable
         $version = intval($gradeable_version ?? 0);
         if ($version < 1 || $version > ($graded_gradeable !== null ? $graded_gradeable->getAutoGradedGradeable()->getHighestVersion() : 0)) {
@@ -1055,6 +1061,10 @@ class SubmissionController extends AbstractController {
             $msg = "You do not have access to that page.";
             $this->core->addErrorMessage($msg);
             return $this->uploadResult($msg, false);
+        }
+
+        if ($gradeable->isLocked($user_id)) {
+            return $this->uploadResult("Gradeable is locked for you.", false);
         }
 
         $graded_gradeable = $this->core->getQueries()->getGradedGradeable($gradeable, $user_id, null);

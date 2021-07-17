@@ -30,6 +30,29 @@
     </div>
 <br><br>
 
+    <div class="option-title">
+        Should this gradeable be locked until a score is reached?
+    </div>
+    <div>
+        <fieldset>
+            <legend>Previous Gradeable:</legend>
+            <div class="option-input col-md-6" style="padding: 0;">
+                <select name="depends_on" id="gradeable-lock">
+                    <option value="">Select an option (Off)</option>
+                    {% for template in template_list %}
+                        <option value="{{ template.g_id }}" {% if template.g_id == gradeable.getDependsOn() %} selected {% endif %}>{{ template.g_title }}-{{ template.g_id }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </fieldset>
+        <fieldset id="gradeable-lock-max-points-field" style="{% if gradeable.getDependsOn() is null %}display: none;{% endif %}">
+            <legend>Autograder Points Required to Unlock:</legend>
+            <input type="number" name="depends_on_points" value="{% if gradeable.getDependsOnPoints() is not null %}{{ gradeable.getDependsOnPoints() }}{% else %}0{% endif %}" id="gradeable-lock-points">
+            <p {% if gradeable.getDependsOn() is null %}hidden{% endif %} id="gradeable-lock-max-points">Out of {{ gradeable_max_points[gradeable.getId()] }} for {{ gradeable.getDependsOn() }}</p>
+        </fieldset>
+    </div>
+<br><br>
+
     <div class="option-title">Choose an autograding configuration:</div>
             <p> You may specify your <a target=_blank href="https://submitty.org/instructor/assignment_configuration/configuration_path#course-autograding-configuration-directory">
                 "Course Autograding Config Directory"<i style="font-style:normal;" class="fa-question-circle"></i></a>
@@ -112,6 +135,8 @@
 </div>
 
 <script>
+    var gradeable_max_autograder_points = {{ gradeable_max_points|json_encode|raw }}
+
     function onPdfChange() {
         if($('#yes_pdf_page').is(':checked')) {
             // $('#pdf_page').show();

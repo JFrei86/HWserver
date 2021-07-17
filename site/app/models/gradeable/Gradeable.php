@@ -72,6 +72,10 @@ use app\controllers\admin\AdminGradeableController;
  * @method float getPrecision()
  * @method Component[] getComponents()
  * @method void setAllowedMinutes($minutes)
+ * @method string getDependsOn()
+ * @method void setDependsOn($depends_on)
+ * @method int getDependsOnPoints()
+ * @method void setDependsOnPoints($depends_on_points)
  * @method bool isRegradeAllowed()
  * @method bool isGradeInquiryPerComponentAllowed()
  * @method void setGradeInquiryPerComponentAllowed($is_grade_inquiry_per_component)
@@ -203,6 +207,10 @@ class Gradeable extends AbstractModel {
     protected $allowed_minutes = null;
     /** @prop @var array Contains all of the allowed time overrides */
     protected $allowed_minutes_overrides = [];
+    /** @prop @var string The dependent gradeable that must be completed before this one */
+    protected $depends_on = null;
+    /** @prop @var int The amount of points a user must reach to unlock this gradeable */
+    protected $depends_on_points = null;
 
     /* Dates for all types of gradeables */
 
@@ -297,6 +305,8 @@ class Gradeable extends AbstractModel {
             $this->setDiscussionThreadId($details['discussion_thread_ids']);
             $this->setAllowCustomMarks($details['allow_custom_marks']);
             $this->setAllowedMinutes($details['allowed_minutes']);
+            $this->setDependsOn($details['depends_on']);
+            $this->setDependsOnPoints($details['depends_on_points']);
             if (array_key_exists('hidden_files', $details)) {
                 $this->setHiddenFiles($details['hidden_files']);
             }
@@ -2120,5 +2130,31 @@ class Gradeable extends AbstractModel {
         foreach ($overrides as $override) {
             $this->allowed_minutes_overrides[$override['user_id']] = $override['allowed_minutes'];
         }
+    }
+
+    /**
+     * Determines if gradeable is locked for user
+     *
+     * @param string $user_id
+     * @return bool
+     */
+    public function isLocked(string $user_id): bool {
+        if ($this->depends_on !== null && $this->depends_on_points !== null) {
+            $dependent_gradeable = $this->core->getQueries()->getGradeableConfig($this->depends_on);
+            if ($dependent_gradeable != null) {
+                $dependent_gradeable_graded = $this->core->getQueries()->getGradedGradeable($dependent_gradeable, $user_id);
+                if ($dependent_gradeable_graded != null) {
+                    if ($dependent_gradeable_graded->hasSubmission()) {
+                        if ($dependent_gradeable_graded->getAutoGradingScore() >= $this->depends_on_points) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            return false;
+        }
+        return true;
     }
 }

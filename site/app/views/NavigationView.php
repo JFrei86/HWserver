@@ -579,6 +579,11 @@ class NavigationView extends AbstractView {
             }
         }
 
+        if ($gradeable->isLocked($core->getUser()->getId())) {
+            $disabled = true;
+            $title = "LOCKED";
+        }
+
         return new Button($core, [
             "title" => $title,
             "subtitle" => $date_text,

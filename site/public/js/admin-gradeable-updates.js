@@ -1,6 +1,8 @@
 
 let updateInProgressCount = 0;
 let errors = {};
+var previous_gradeable = "";
+var gradeable = "";
 function updateErrorMessage() {
     if (Object.keys(errors).length !== 0) {
         $('#save_status').html('<span style="color: red">Some Changes Failed!</span>');
@@ -108,6 +110,33 @@ $(document).ready(function () {
         if ($(this).hasClass('ignore')) {
             return;
         }
+        if (previous_gradeable === '') {
+            previous_gradeable = $('#gradeable-lock').val();
+        }
+        gradeable = $('#gradeable-lock').val();
+        if (previous_gradeable !== gradeable) {
+            $('#gradeable-lock-points').val(0);
+        }
+        if (gradeable !== '') {
+            $('#gradeable-lock-max-points-field').show();
+            $('#gradeable-lock-max-points').text(`Out of ${gradeable_max_autograder_points[gradeable]} for ${gradeable}`);
+            previous_gradeable = gradeable;
+        }
+        else {
+            $('#gradeable-lock-points').val(0);
+            $('#gradeable-lock-max-points-field').hide();
+        }
+
+        let points = $('#gradeable-lock-points').val();
+        if (points === '') {
+            return false;
+        }
+        points = parseInt(points);
+        if ((points < 0 || points > gradeable_max_autograder_points[gradeable])) {
+            displayErrorMessage("Points must be between 0 and the max autograder points for that gradeable.");
+            return;
+        }
+
         // If its rubric-related, then make different request
         if ($('#gradeable_rubric').find('[name="' + this.name + '"]').length > 0) {
             // ... but don't automatically save electronic rubric data
