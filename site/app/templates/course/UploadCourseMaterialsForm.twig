@@ -115,8 +115,8 @@
         </div>
     </div>
     <script>
-        function makeSubmission(expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections) {
-            handleUploadCourseMaterials("{{ csrf_token }}", expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections);
+        function makeSubmission(expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections, sections_lock) {
+            handleUploadCourseMaterials("{{ csrf_token }}", expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections, sections_lock);
         }
         $(function() {
             $("#submit-materials").click(function(e){ // Submit button
@@ -147,7 +147,8 @@
                 }
                 var cmPath = document.getElementById('cm_path').innerHTML;
                 var requestedPath = document.getElementById("input-provide-full-path").value;
-                makeSubmission(expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections);
+                var sections_lock = document.getElementById('all_Sections_Showing_yes').checked === true;
+                makeSubmission(expandZip, hideFromStudents, cmPath, requestedPath, cmTime, sort, sections, sections_lock);
                 e.stopPropagation();
             });
         });

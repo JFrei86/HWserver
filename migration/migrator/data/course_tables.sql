@@ -169,6 +169,50 @@ ALTER SEQUENCE public.categories_list_category_id_seq OWNED BY public.categories
 
 
 --
+-- Name: course_materials; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.course_materials (
+    id integer NOT NULL,
+    path character varying(255),
+    type smallint NOT NULL,
+    release_date timestamp with time zone,
+    hidden_from_students boolean,
+    priority double precision NOT NULL
+);
+
+
+--
+-- Name: course_materials_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.course_materials_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: course_materials_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.course_materials_id_seq OWNED BY public.course_materials.id;
+
+
+--
+-- Name: course_materials_sections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.course_materials_sections (
+    course_material_id integer NOT NULL,
+    section_id character varying(255) NOT NULL
+);
+
+
+--
 -- Name: electronic_gradeable; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1093,6 +1137,13 @@ ALTER TABLE ONLY public.categories_list ALTER COLUMN category_id SET DEFAULT nex
 
 
 --
+-- Name: course_materials id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials ALTER COLUMN id SET DEFAULT nextval('public.course_materials_id_seq'::regclass);
+
+
+--
 -- Name: gradeable_access id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1204,6 +1255,22 @@ ALTER TABLE ONLY public.categories_list
 
 ALTER TABLE ONLY public.categories_list
     ADD CONSTRAINT category_unique UNIQUE (category_desc);
+
+
+--
+-- Name: course_materials course_materials_path_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials
+    ADD CONSTRAINT course_materials_path_key UNIQUE (path);
+
+
+--
+-- Name: course_materials course_materials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials
+    ADD CONSTRAINT course_materials_pkey PRIMARY KEY (id);
 
 
 --
@@ -1428,6 +1495,14 @@ ALTER TABLE ONLY public.peer_assign
 
 ALTER TABLE ONLY public.peer_feedback
     ADD CONSTRAINT peer_feedback_pkey PRIMARY KEY (g_id, grader_id, user_id);
+
+
+--
+-- Name: course_materials_sections pk_course_material_section; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials_sections
+    ADD CONSTRAINT pk_course_material_section PRIMARY KEY (course_material_id, section_id);
 
 
 --
@@ -1662,6 +1737,22 @@ ALTER TABLE ONLY public.electronic_gradeable_version
 
 ALTER TABLE ONLY public.electronic_gradeable_version
     ADD CONSTRAINT electronic_gradeable_version_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON UPDATE CASCADE;
+
+
+--
+-- Name: course_materials_sections fk_course_material_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials_sections
+    ADD CONSTRAINT fk_course_material_id FOREIGN KEY (course_material_id) REFERENCES public.course_materials(id) ON DELETE CASCADE;
+
+
+--
+-- Name: course_materials_sections fk_section_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.course_materials_sections
+    ADD CONSTRAINT fk_section_id FOREIGN KEY (section_id) REFERENCES public.sections_registration(sections_registration_id) ON DELETE CASCADE;
 
 
 --

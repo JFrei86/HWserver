@@ -75,10 +75,11 @@
                         sectionsEdit.push(element['sections_registration_id']);
                     }
                 });
+                let sections_lock = document.getElementById('all-sections-showing-yes').checked === true;
                 if({{ reg_sections|json_encode|raw }} == null || $("#all-sections-showing-no").is(':checked') == true){
                     sectionsEdit = null;
                 }
-                handleEditCourseMaterials("{{ csrf_token }}", hideFromStudents, requestedPath, sectionsEdit, cmTime, sort);
+                handleEditCourseMaterials("{{ csrf_token }}", hideFromStudents, requestedPath, sectionsEdit, cmTime, sort, sections_lock, null);
         };
 
         flatpickr('.edit-picker', {

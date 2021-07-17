@@ -1,0 +1,137 @@
+{% extends 'generic/Popup.twig' %}
+{% block popup_id %}edit-course-materials-folder-form{% endblock %}
+{% block title %}Edit Course Material Folder{% endblock %}
+{% block body %}
+    <div id="material-folder-edit-form" class="flex-col flex-col-space" data-directory = "Check">
+        <p>NOTE: Sorting rank will edit the rank of the folder only.</p>
+        <label>
+            <span>
+                <strong>Sorting rank (lower value = higher position):</strong>
+            </span>
+            <input id="edit-folder-sort" value="Check" type="text" size="26"/>
+        </label>
+        <hr>
+        <p>NOTE: All below fields will apply to all files in all sub-folders rather than the folder!</p>
+        <fieldset id="edit_folder_sections">
+            <legend class="black-message">
+                Do you want to restrict this course material to some sections?
+            </legend>
+            <label class = "radio">
+                <input id = "all-sections-showing-no-folder" name="show-some-section-selection-edit" type = "radio" onchange="toggleRegistrationSectionsFolderEdit()" checked>
+                No
+            </label>
+            <label class = "radio">
+                <input id = "all-sections-showing-yes-folder" name="show-some-section-selection-edit" type = "radio" onchange="toggleRegistrationSectionsFolderEdit()">
+                Yes
+            </label>
+            <br>
+            <span id = "show-some-section-selection-folder-edit" style="display: none">
+            {% for section in reg_sections %}
+                <tr>
+                    <span class = "inline">
+                        <td>
+                          <label for="section-folder-edit-{{section['sections_registration_id']}}">Section {{ section['sections_registration_id'] }}</label>
+                        </td>
+                        <td>
+                            <input id="section-folder-edit-{{section['sections_registration_id']}}" type="checkbox" value="off"/>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                    </span>
+                </tr>
+            {% endfor %}
+            </span>
+            <script>
+                function toggleRegistrationSectionsFolderEdit(){
+                    $("#show-some-section-selection-folder-edit").toggle();
+                }
+            </script>
+        </fieldset>
+        <label>
+            <span>
+                <strong>Choose a time to release the files being uploaded:</strong>
+            </span>
+            <input id="edit-folder-picker" class="edit-folder-picker" type="text" size="26"/>
+        </label>
+        <label>
+            <input id="hide-folder-materials-checkbox-edit" type="checkbox"/>
+            Hide from students (Note: If checked, students will not be able to see course materials, but can still access them via the URL)
+        </label>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    </div>
+    <script>
+        function submitFolderEdit(fullUpdate){ // Submit button
+            let sectionsEdit = [];
+            let cmTime = document.getElementById("edit-folder-picker").value;
+            let sort = document.getElementById("edit-folder-sort").value;
+            let requestedPath = document.getElementById("material-folder-edit-form").getAttribute("data-directory");
+            let hideFromStudents = 'off';
+            if  ($("#hide-folder-materials-checkbox-edit").is(':checked'))  {
+                hideFromStudents = 'on';
+            }
+
+            let reg_sectionArray = JSON.parse('{{ reg_sections|json_encode|raw }}');
+            reg_sectionArray.forEach(function(element){
+                let currentSectionEdit = '#section-folder-edit-' +element['sections_registration_id']
+                if  ($(currentSectionEdit).is(':checked'))  {
+                    sectionsEdit.push(element['sections_registration_id']);
+                }
+            });
+            let sections_lock = document.getElementById('all-sections-showing-yes-folder').checked === true;
+            if({{ reg_sections|json_encode|raw }} == null || $("#all-sections-showing-no-folder").is(':checked') == true){
+                sectionsEdit = null;
+            }
+            handleEditCourseMaterials("{{ csrf_token }}", hideFromStudents, requestedPath, sectionsEdit, cmTime, sort, sections_lock, fullUpdate);
+        };
+
+        flatpickr('.edit-folder-picker', {
+            plugins: [ShortcutButtonsPlugin(
+                    {
+                        button: [
+                            {
+                                label: "Now"
+                            },
+                            {
+                                label: "Tomorrow"
+                            },
+                            {
+                                label: "End of time"
+                            }
+
+                        ],
+                        onClick: (index, fp) => {
+                            let date;
+                            switch (index) {
+                                case 0:
+                                    date = new Date();
+                                    break;
+                                case 1:
+                                    date = new Date();
+                                    date.setDate(date.getDate() + 1);
+                                    break;
+                                case 2:
+                                    date = new Date("9998-01-01 00:00:00");
+                                    break;
+                            }
+                            fp.setDate(date);
+                        }
+                    }
+            )],
+            allowInput: true,
+            enableTime: true,
+            enableSeconds: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d H:i:S",
+            onReady: (a, b, fp) => {
+                fp.calendarContainer.firstChild.childNodes[1].firstChild.firstChild.setAttribute('aria-label', 'Month');
+                fp.calendarContainer.childNodes[2].childNodes[4].firstChild.setAttribute('aria-label', 'Seconds');
+            }
+        });
+    </script>
+{% endblock %}
+{% block buttons %}
+    {{ block('close_button') }}
+    <input class="btn btn-primary" id="submit-folder-edit" type="submit" value="Submit Sort Change" onclick = "submitFolderEdit(false);"/>
+    <input class="btn btn-primary" id="submit-folder-edit-full" type="submit" value="Submit Full Update" onclick="submitFolderEdit(true);">
+{% endblock %}

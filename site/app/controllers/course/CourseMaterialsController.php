@@ -3,42 +3,32 @@
 namespace app\controllers\course;
 
 use app\controllers\AbstractController;
-use app\libraries\CourseMaterialsUtils;
+use app\entities\course\CourseMaterialSection;
 use app\libraries\DateUtils;
 use app\libraries\FileUtils;
+use app\libraries\response\JsonResponse;
+use app\libraries\response\RedirectResponse;
+use app\libraries\response\WebResponse;
 use app\libraries\Utils;
-use app\libraries\ErrorMessages;
-use app\libraries\routers\AccessControl;
+use app\entities\course\CourseMaterial;
+use app\views\course\CourseMaterialsView;
 use Symfony\Component\Routing\Annotation\Route;
+use app\libraries\routers\AccessControl;
 
 class CourseMaterialsController extends AbstractController {
     /**
      * @Route("/courses/{_semester}/{_course}/course_materials")
      */
-    public function viewCourseMaterialsPage() {
-        $this->core->getOutput()->renderOutput(
-            ['course', 'CourseMaterials'],
+    public function viewCourseMaterialsPage(): WebResponse {
+        $course_materials = $this->core->getCourseEntityManager()
+            ->getRepository(CourseMaterial::class)
+            ->findAll();
+        return new WebResponse(
+            CourseMaterialsView::class,
             'listCourseMaterials',
-            $this->core->getUser()
+            $this->core->getUser(),
+            $course_materials
         );
-    }
-
-    public function deleteHelper($file, &$json) {
-        if ((array_key_exists('name', $file))) {
-            $filename = $file['path'];
-            unset($json[$filename]);
-            return;
-        }
-        else {
-            if (array_key_exists('files', $file)) {
-                $this->deleteHelper($file['files'], $json);
-            }
-            else {
-                foreach ($file as $f) {
-                    $this->deleteHelper($f, $json);
-                }
-            }
-        }
     }
 
     /**
@@ -52,26 +42,18 @@ class CourseMaterialsController extends AbstractController {
         if (!$this->core->getAccess()->canI("path.write", ["path" => $path, "dir" => $dir])) {
             $message = "You do not have access to that page.";
             $this->core->addErrorMessage($message);
-            $this->core->redirect($this->core->buildCourseUrl(['course_materials']));
+            return new RedirectResponse($this->core->buildCourseUrl(['course_materials']));
         }
 
-        // remove entry from json file
-        $fp = $this->core->getConfig()->getCoursePath() . '/uploads/course_materials_file_data.json';
-        $json = FileUtils::readJsonFile($fp);
+        $all_files = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)->findAll();
 
-        if ($json != false) {
-            $all_files = is_dir($path) ? FileUtils::getAllFiles($path) : [$path];
-            foreach ($all_files as $file) {
-                if (is_array($file)) {
-                    $this->deleteHelper($file, $json);
-                }
-                else {
-                    unset($json[$file]);
-                }
+        foreach ($all_files as $file) {
+            if (Utils::startsWith($file->getPath(), $path)) {
+                $this->core->getCourseEntityManager()->remove($file);
             }
-            file_put_contents($fp, FileUtils::encodeJson($json));
         }
-
+        $this->core->getCourseEntityManager()->flush();
+        $success = false;
         if (is_dir($path)) {
             $success = FileUtils::recursiveRmdir($path);
         }
@@ -86,8 +68,7 @@ class CourseMaterialsController extends AbstractController {
             $this->core->addErrorMessage("Failed to remove " . basename($path));
         }
 
-        //refresh course materials page
-        $this->core->redirect($this->core->buildCourseUrl(['course_materials']));
+        return new RedirectResponse($this->core->buildCourseUrl(['course_materials']));
     }
 
     /**
@@ -111,10 +92,6 @@ class CourseMaterialsController extends AbstractController {
         // Always delete the zip file after script execution
         register_shutdown_function('unlink', $zip_name);
 
-        // getting the meta-data of the course-material in '$json' variable
-        $file_data = $this->core->getConfig()->getCoursePath() . '/uploads/course_materials_file_data.json';
-        $json = FileUtils::readJsonFile($file_data);
-
         $zip = new \ZipArchive();
         $zip->open($zip_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         $isFolderEmptyForMe = true;
@@ -126,20 +103,23 @@ class CourseMaterialsController extends AbstractController {
         foreach ($files as $name => $file) {
             if (!$file->isDir()) {
                 $file_path = $file->getRealPath();
-
-                if (!$this->core->getUser()->accessGrading()) {
-                    // only add the file if the section of student is allowed and course material is released!
-                    if (CourseMaterialsUtils::isSectionAllowed($json, $file_path, $this->core->getUser()) && $json[$file_path]['release_datetime'] < $this->core->getDateTimeNow()->format("Y-m-d H:i:sO")) {
+                $course_material = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+                    ->findOneBy(['path' => $file_path]);
+                if ($course_material !== null) {
+                    if (!$this->core->getUser()->accessGrading()) {
+                        // only add the file if the section of student is allowed and course material is released!
+                        if ($course_material->isSectionAllowed($this->core->getUser()) && $course_material->getReleaseDate() < $this->core->getDateTimeNow()) {
+                            $relativePath = substr($file_path, strlen($root_path) + 1);
+                            $isFolderEmptyForMe = false;
+                            $zip->addFile($file_path, $relativePath);
+                        }
+                    }
+                    else {
+                        // For graders and instructors, download the course-material unconditionally!
                         $relativePath = substr($file_path, strlen($root_path) + 1);
                         $isFolderEmptyForMe = false;
                         $zip->addFile($file_path, $relativePath);
                     }
-                }
-                else {
-                    // For graders and instructors, download the course-material unconditionally!
-                    $relativePath = substr($file_path, strlen($root_path) + 1);
-                    $isFolderEmptyForMe = false;
-                    $zip->addFile($file_path, $relativePath);
                 }
             }
         }
@@ -162,31 +142,23 @@ class CourseMaterialsController extends AbstractController {
      * @Route("/courses/{_semester}/{_course}/course_materials/modify_timestamp")
      * @AccessControl(role="INSTRUCTOR")
      */
-    public function modifyCourseMaterialsFileTimeStamp($filenames, $newdatatime) {
+    public function modifyCourseMaterialsFileTimeStamp($filenames, $newdatatime): JsonResponse {
         $data = $_POST['fn'];
-        $hide_from_students = null;
-        $external_link = false;
 
         if (!isset($newdatatime)) {
             $this->core->redirect($this->core->buildCourseUrl(['course_materials']));
         }
 
         $new_data_time = htmlspecialchars($newdatatime);
-        $new_data_time = DateUtils::parseDateTime($new_data_time, $this->core->getUser()->getUsableTimeZone());
-        $new_data_time = DateUtils::dateTimeToString($new_data_time);
-
-        //Check if the datetime is correct
-        if (\DateTime::createFromFormat('Y-m-d H:i:sO', $new_data_time) === false) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: Improperly formatted date", false);
-        }
-
-        $new_data_time = DateUtils::parseDateTime($new_data_time, $this->core->getUser()->getUsableTimeZone());
-        $new_data_time = DateUtils::dateTimeToString($new_data_time);
+        $new_data_time = DateUtils::parseDateTime($new_data_time, $this->core->getDateTimeNow()->getTimezone());
 
         //only one will not iterate correctly
         if (is_string($data)) {
             $data = [$data];
         }
+
+        $has_error = false;
+        $success = false;
 
         foreach ($data as $filename) {
             if (!isset($filename)) {
@@ -194,98 +166,138 @@ class CourseMaterialsController extends AbstractController {
             }
 
             $file_name = htmlspecialchars($filename);
-            $fp = $this->core->getConfig()->getCoursePath() . '/uploads/course_materials_file_data.json';
-
-            $sections = null;
-            $json = FileUtils::readJsonFile($fp);
-            if ($json != false) {
-                if (isset($json[$file_name]['sections'])) {
-                    $sections  = $json[$file_name]['sections'];
-                }
-                if (isset($json[$file_name]['hide_from_students'])) {
-                    $hide_from_students  = $json[$file_name]['hide_from_students'];
-                }
-                if (isset($json[$file_name]['external_link'])) {
-                    $external_link  = $json[$file_name]['external_link'];
-                }
-            }
-            if (!is_null($sections)) {
-                $json[$file_name] = ['release_datetime' => $new_data_time, 'sections' => $sections, 'hide_from_students' => $hide_from_students, 'external_link' => $external_link];
+            $course_material = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+                ->findOneBy(['path' => $file_name]);
+            if ($course_material !== null) {
+                $course_material->setReleaseDate($new_data_time);
             }
             else {
-                $json[$file_name] = ['release_datetime' => $new_data_time, 'hide_from_students' => $hide_from_students, 'external_link' => $external_link];
-            }
-            if (file_put_contents($fp, FileUtils::encodeJson($json)) === false) {
-                return $this->core->getOutput()->renderResultMessage("ERROR: Failed to update.", false);
+                $has_error = true;
             }
         }
 
-        return $this->core->getOutput()->renderResultMessage("Time successfully set.", true);
+        $this->core->getCourseEntityManager()->flush();
+
+        if ($has_error) {
+            return JsonResponse::getErrorResponse("Failed to find one of the course materials.");
+        }
+        return JsonResponse::getSuccessResponse("Time successfully set.");
+    }
+
+    private function recursiveEditFolder(array $course_materials, CourseMaterial $main_course_material) {
+        foreach ($course_materials as $course_material) {
+            if (
+                Utils::startsWith($course_material->getPath(), $main_course_material->getPath())
+                && $course_material->getPath() != $main_course_material->getPath()
+            ) {
+                if ($course_material->isDir()) {
+                    $this->recursiveEditFolder($course_materials, $course_material);
+                }
+                else {
+                    $_POST['requested_path'] = $course_material->getPath();
+                    $this->ajaxEditCourseMaterialsFiles(false);
+                }
+            }
+        }
     }
 
     /**
      * @Route("/courses/{_semester}/{_course}/course_materials/edit", methods={"POST"})
      * @AccessControl(role="INSTRUCTOR")
      */
-    public function ajaxEditCourseMaterialsFiles() {
-        $sections = null;
-        if (isset($_POST['sections'])) {
-            $sections = $_POST['sections'] ?? null;
-        }
-
-        if (empty($sections) && !is_null($sections)) {
-            $sections = [];
-        }
-
-        $sections_exploded = $sections;
-
-        if (!(is_null($sections)) && !empty($sections)) {
-            $sections_exploded = explode(",", $sections);
-        }
-
-        $hide_from_students = $_POST['hide_from_students'];
-        $sort_priority = floatval($_POST['sort_priority']);
-
-        $requested_path = "";
-        if (isset($_POST['requested_path'])) {
-            $requested_path = $_POST['requested_path'] ?? '';
-        }
-
-        $release_time = "";
-        if (isset($_POST['release_time'])) {
-            $date_time = DateUtils::parseDateTime($_POST['release_time'], $this->core->getUser()->getUsableTimeZone());
-            $release_time = DateUtils::dateTimeToString($date_time);
-        }
+    public function ajaxEditCourseMaterialsFiles(bool $flush = true): JsonResponse {
+        $requested_path = $_POST['requested_path'] ?? '';
         if ($requested_path === '') {
-            return $this->core->getOutput()->renderResultMessage('Requested path cannot be empty');
+            return JsonResponse::getErrorResponse("Requested path cannot be empty");
         }
-        $fp = FileUtils::joinPaths($this->core->getConfig()->getCoursePath(), 'uploads', 'course_materials_file_data.json');
-        $json = FileUtils::readJsonFile($fp);
-        $files_to_modify = is_dir($requested_path) ? FileUtils::getAllFiles($requested_path, [], true) : [['path' => $requested_path]];
-
-        $file_path_release_datetime = "";
-        $external_link = "";
-        foreach ($files_to_modify as $file) {
-            $file_path = $file['path'];
-            $file_path_release_datetime = empty($release_time) ? $json[$file_path]['release_datetime'] : $release_time;
-            $external_link = isset($json[$file_path]['external_link']) ? $json[$file_path]['external_link'] : false;
-
-            $json[$file_path] =  ['release_datetime' => $file_path_release_datetime, 'sections' => $sections_exploded, 'hide_from_students' => $hide_from_students, 'external_link' => $external_link];
+        $course_material = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+            ->findOneBy(['path' => $requested_path]);
+        if ($course_material == null) {
+            return JsonResponse::getErrorResponse("Course material not found");
         }
-        $json[$requested_path] =  ['release_datetime' => $file_path_release_datetime, 'sections' => $sections_exploded, 'hide_from_students' => $hide_from_students, 'external_link' => $external_link, 'sort_priority' => $sort_priority];
 
-        FileUtils::writeJsonFile($fp, $json);
-        return $this->core->getOutput()->renderResultMessage("Successfully uploaded!", true);
+        if ($course_material->isDir()) {
+            if (isset($_POST['sort_priority'])) {
+                $course_material->setPriority($_POST['sort_priority']);
+                unset($_POST['sort_priority']);
+            }
+            if (
+                (isset($_POST['sections_lock'])
+                || isset($_POST['hide_from_students'])
+                || isset($_POST['release_time']))
+                && isset($_POST['folder_update'])
+                && $_POST['folder_update'] == 'true'
+            ) {
+                $course_materials = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+                    ->findAll();
+                $this->recursiveEditFolder($course_materials, $course_material);
+            }
+            $this->core->getCourseEntityManager()->flush();
+            return JsonResponse::getSuccessResponse("Success");
+        }
+
+        //handle sections here
+
+        if (isset($_POST['sections_lock']) && $_POST['sections_lock'] == "true") {
+            if ($_POST['sections'] === "") {
+                $sections = null;
+            }
+            else {
+                $sections = explode(",", $_POST['sections']);
+            }
+            if ($sections != null) {
+                $keep_ids = [];
+
+                foreach ($sections as $section) {
+                    $keep_ids[] = $section;
+                    $found = false;
+                    foreach ($course_material->getSections() as $course_section) {
+                        if ($section === $course_section->getSectionId()) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $course_material_section = new CourseMaterialSection($section, $course_material);
+                        $course_material->addSection($course_material_section);
+                    }
+                }
+
+                foreach ($course_material->getSections() as $section) {
+                    if (!in_array($section->getSectionId(), $keep_ids)) {
+                        $course_material->removeSection($section);
+                    }
+                }
+            }
+        }
+        elseif ($_POST['sections_lock'] == "false") {
+            $course_material->getSections()->clear();
+        }
+        if (isset($_POST['hide_from_students'])) {
+            $course_material->setHiddenFromStudents($_POST['hide_from_students'] == 'on');
+        }
+        if (isset($_POST['sort_priority'])) {
+            $course_material->setPriority($_POST['sort_priority']);
+        }
+
+        if (isset($_POST['release_time']) && $_POST['release_time'] != '') {
+            $date_time = DateUtils::parseDateTime($_POST['release_time'], $this->core->getDateTimeNow()->getTimezone());
+            $course_material->setReleaseDate($date_time);
+        }
+
+        if ($flush) {
+            $this->core->getCourseEntityManager()->flush();
+        }
+
+        return JsonResponse::getSuccessResponse("Successfully uploaded!");
     }
 
     /**
      * @Route("/courses/{_semester}/{_course}/course_materials/upload", methods={"POST"})
      * @AccessControl(role="INSTRUCTOR")
      */
-    public function ajaxUploadCourseMaterialsFiles() {
-        if (!isset($_POST['csrf_token']) || !$this->core->checkCsrfToken($_POST['csrf_token'])) {
-            return $this->core->getOutput()->renderResultMessage("Invalid CSRF token.", false, false);
-        }
+    public function ajaxUploadCourseMaterialsFiles(): JsonResponse {
+        $details = [];
 
         $expand_zip = "";
         if (isset($_POST['expand_zip'])) {
@@ -296,44 +308,38 @@ class CourseMaterialsController extends AbstractController {
         if (isset($_POST['requested_path'])) {
             $requested_path = $_POST['requested_path'];
         }
+        $details['path'][0] = $requested_path;
 
-        $release_time = "";
         if (isset($_POST['release_time'])) {
-            $date_time = DateUtils::parseDateTime($_POST['release_time'], $this->core->getUser()->getUsableTimeZone());
-            $release_time = DateUtils::dateTimeToString($date_time);
+            $details['release_date'] = $_POST['release_time'];
         }
 
-        $sections = null;
-        if (isset($_POST['sections'])) {
+        $sections_lock = false;
+        if (isset($_POST['sections_lock'])) {
+            $sections_lock = $_POST['sections_lock'] == "true";
+        }
+        $details['section_lock'] = $sections_lock;
+
+        if (isset($_POST['sections']) && $sections_lock) {
             $sections = $_POST['sections'];
+            $sections_exploded = @explode(",", $sections);
+            $details['sections'] = $sections_exploded;
+        }
+        else {
+            $details['sections'] = null;
         }
 
-        $hide_from_students = null;
         if (isset($_POST['hide_from_students'])) {
-            $hide_from_students = $_POST['hide_from_students'];
+            $details['hidden_from_students'] = $_POST['hide_from_students'] == "on";
         }
 
-        $sort_priority = 0;
         if (isset($_POST['sort_priority'])) {
-            $sort_priority = $_POST['sort_priority'];
+            $details['priority'] = $_POST['sort_priority'];
         }
-
-        if (empty($sections) && !is_null($sections)) {
-            $sections = [];
-        }
-
-        //Check if the datetime is correct
-        if (\DateTime::createFromFormat('Y-m-d H:i:sO', $release_time) === false) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: Improperly formatted date", false);
-        }
-
-
-        $fp = $this->core->getConfig()->getCoursePath() . '/uploads/course_materials_file_data.json';
-        $json = FileUtils::readJsonFile($fp);
 
         $n = strpos($requested_path, '..');
         if ($n !== false) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: .. is not supported in a course materials filepath.", false, false);
+            return JsonResponse::getErrorResponse("Invalid filepath.");
         }
 
         $url_title = null;
@@ -344,7 +350,7 @@ class CourseMaterialsController extends AbstractController {
         $url_url = null;
         if (isset($_POST['url_url'])) {
             if (!filter_var($_POST['url_url'], FILTER_VALIDATE_URL)) {
-                return $this->core->getOutput()->renderResultMessage("ERROR: Invalid url", false);
+                return JsonResponse::getErrorResponse("Invalid url");
             }
             $url_url = $_POST['url_url'];
         }
@@ -376,54 +382,80 @@ class CourseMaterialsController extends AbstractController {
         }
 
         if (empty($uploaded_files)) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: No files were submitted.", false);
+            return JsonResponse::getErrorResponse("No files were submitted.");
         }
 
         $status = FileUtils::validateUploadedFiles($_FILES["files1"]);
         if (array_key_exists("failed", $status)) {
-            return $this->core->getOutput()->renderResultMessage("Failed to validate uploads " . $status["failed"], false);
+            return JsonResponse::getErrorResponse("Failed to validate uploads " . $status['failed']);
         }
 
         $file_size = 0;
         foreach ($status as $stat) {
             $file_size += $stat['size'];
             if ($stat['success'] === false) {
-                return $this->core->getOutput()->renderResultMessage("Error " . $stat['error'], false);
+                return JsonResponse::getErrorResponse($stat['error']);
             }
         }
 
         $max_size = Utils::returnBytes(ini_get('upload_max_filesize'));
         if ($file_size > $max_size) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: File(s) uploaded too large.  Maximum size is " . ($max_size / 1024) . " kb. Uploaded file(s) was " . ($file_size / 1024) . " kb.", false);
+            return JsonResponse::getErrorResponse("File(s) uploaded too large. Maximum size is " . ($max_size / 1024) . " kb. Uploaded file(s) was " . ($file_size / 1024) . " kb.");
         }
 
         // creating uploads/course_materials directory
         $upload_path = FileUtils::joinPaths($this->core->getConfig()->getCoursePath(), "uploads", "course_materials");
         if (!FileUtils::createDir($upload_path)) {
-            return $this->core->getOutput()->renderResultMessage("ERROR: Failed to make image path.", false);
+            return JsonResponse::getErrorResponse("Failed to make image path.");
         }
-
+        $dirs_to_make = null;
         // create nested path
         if (!empty($requested_path)) {
             $upload_nested_path = FileUtils::joinPaths($upload_path, $requested_path);
             if (!FileUtils::createDir($upload_nested_path, true)) {
-                return $this->core->getOutput()->renderResultMessage("ERROR: Failed to make image path.", false);
+                return JsonResponse::getErrorResponse("Failed to make image path.");
+            }
+            $dirs_to_make = [];
+            $dirs = explode('/', $requested_path);
+            $j = count($dirs);
+            foreach ($dirs as $dir) {
+                for ($i = 0; $i < $j; $i++) {
+                    if (!isset($dirs_to_make[$i])) {
+                        $dirs_to_make[$i] = $upload_path . '/' . $dir;
+                    }
+                    else {
+                        $dirs_to_make[$i] .= '/' . $dir;
+                    }
+                }
+                $j--;
             }
             $upload_path = $upload_nested_path;
         }
 
         $count_item = count($status);
         if (isset($uploaded_files[1])) {
+            $index = 0;
             for ($j = 0; $j < $count_item; $j++) {
                 $is_external_link_file = $uploaded_files[1]["name"][$j] == $external_link_file_name;
                 if (is_uploaded_file($uploaded_files[1]["tmp_name"][$j]) || $is_external_link_file) {
                     $dst = FileUtils::joinPaths($upload_path, $uploaded_files[1]["name"][$j]);
 
+                    $cm = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+                        ->findOneBy(['path' => $dst]);
+                    if ($cm != null) {
+                        return JsonResponse::getErrorResponse("A file already exists with path " .
+                            $dst . ". Please delete the current file if you would like to use this path.");
+                    }
+
+                    if (strlen($dst) > 255) {
+                        return JsonResponse::getErrorResponse("Path cannot have a string length of more than 255 chars.");
+                    }
+
                     $is_zip_file = false;
 
                     if (mime_content_type($uploaded_files[1]["tmp_name"][$j]) == "application/zip") {
                         if (FileUtils::checkFileInZipName($uploaded_files[1]["tmp_name"][$j]) === false) {
-                            return $this->core->getOutput()->renderResultMessage("ERROR: You may not use quotes, backslashes or angle brackets in your filename for files inside " . $uploaded_files[1]["name"][$j] . ".", false);
+                            return JsonResponse::getErrorResponse("You may not use quotes, backslashes, or angle brackets in your filename for files inside " . $uploaded_files[1]['name'][$j] . ".");
                         }
                         $is_zip_file = true;
                     }
@@ -436,7 +468,7 @@ class CourseMaterialsController extends AbstractController {
                         $res = $zip->open($uploaded_files[1]["tmp_name"][$j]);
 
                         if (!$res) {
-                            return $this->core->getOutput()->renderResultMessage("ERROR: Failed to open zip archive", false);
+                            return JsonResponse::getErrorResponse("Failed to open zip archive");
                         }
 
                         $entries = [];
@@ -465,63 +497,96 @@ class CourseMaterialsController extends AbstractController {
                             return substr($entry, -1) !== '/';
                         });
 
+                        foreach ($zfiles as $zfile) {
+                            $path = FileUtils::joinPaths($upload_path, $zfile);
+                            $cm = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)
+                                ->findOneBy(['path' => $path]);
+                            if ($cm != null) {
+                                return JsonResponse::getErrorResponse("A file already exists with path " .
+                                $path . ". Please delete the current file if you would like to use this path.");
+                            }
+                        }
+
                         $zip->extractTo($upload_path, $entries);
 
                         foreach ($zfiles as $zfile) {
                             $path = FileUtils::joinPaths($upload_path, $zfile);
-                            if (!(is_null($sections))) {
-                                $sections_exploded = @explode(",", $sections);
-                                if ($sections_exploded == null) {
-                                    $sections_exploded = [];
+                            $details['type'][$index] = $is_external_link_file ? CourseMaterial::LINK : CourseMaterial::FILE;
+                            $details['path'][$index] = $path;
+                            if ($dirs_to_make == null) {
+                                $dirs_to_make = [];
+                            }
+                            $dirs = explode('/', $zfile);
+                            array_pop($dirs);
+                            $j = count($dirs);
+                            $count = count($dirs_to_make);
+                            foreach ($dirs as $dir) {
+                                for ($i = $count; $i < $j + $count; $i++) {
+                                    if (!isset($dirs_to_make[$i])) {
+                                        $dirs_to_make[$i] = $upload_path . '/' . $dir;
+                                    }
+                                    else {
+                                        $dirs_to_make[$i] .= '/' . $dir;
+                                    }
                                 }
-                                $json[$path] = [
-                                    'release_datetime' => $release_time,
-                                    'sections' => $sections_exploded,
-                                    'hide_from_students' => $hide_from_students,
-                                    'external_link' => $is_external_link_file,
-                                    'sort_priority' => $sort_priority
-                                ];
+                                $j--;
                             }
-                            else {
-                                $json[$path] = [
-                                    'release_datetime' => $release_time,
-                                    'hide_from_students' => $hide_from_students,
-                                    'external_link' => $is_external_link_file,
-                                    'sort_priority' => $sort_priority
-                                ];
-                            }
+                            $index++;
                         }
                     }
                     else {
                         if (!@copy($uploaded_files[1]["tmp_name"][$j], $dst)) {
-                            return $this->core->getOutput()->renderResultMessage("ERROR: Failed to copy uploaded file {$uploaded_files[1]["name"][$j]} to current location.", false);
+                            return JsonResponse::getErrorResponse("Failed to copy uploaded file {$uploaded_files[1]['name'][$j]} to current location.");
                         }
                         else {
-                            if (!(is_null($sections))) {
-                                $sections_exploded = @explode(",", $sections);
-                                if ($sections_exploded == null) {
-                                    $sections_exploded = [];
-                                }
-                                $json[$dst] = ['release_datetime' => $release_time, 'sections' => $sections_exploded, 'hide_from_students' => $hide_from_students, 'external_link' => $is_external_link_file, 'sort_priority' => $sort_priority];
-                            }
-                            else {
-                                $json[$dst] = ['release_datetime' => $release_time, 'hide_from_students' => $hide_from_students, 'external_link' => $is_external_link_file, 'sort_priority' => $sort_priority];
-                            }
+                            $details['type'][$index] = $is_external_link_file ? CourseMaterial::LINK : CourseMaterial::FILE;
+                            $details['path'][$index] = $dst;
+                            $index++;
                         }
                     }
-                    //
                 }
                 else {
-                    return $this->core->getOutput()->renderResultMessage("ERROR: The tmp file '{$uploaded_files[1]['name'][$j]}' was not properly uploaded.", false);
+                    return JsonResponse::getErrorResponse("The tmp file '{$uploaded_files[1]['name'][$j]}' was not properly uploaded.");
                 }
                 // Is this really an error we should fail on?
                 if (!@unlink($uploaded_files[1]["tmp_name"][$j])) {
-                    return $this->core->getOutput()->renderResultMessage("ERROR: Failed to delete the uploaded file {$uploaded_files[1]["name"][$j]} from temporary storage.", false);
+                    return JsonResponse::getErrorResponse("Failed to delete the uploaded file {$uploaded_files[1]['name'][$j]} from temporary storage.");
+                }
+            }
+        }
+        if ($dirs_to_make != null) {
+            $i = -1;
+            $new_paths = [];
+            foreach ($dirs_to_make as $dir) {
+                $cm = $this->core->getCourseEntityManager()->getRepository(CourseMaterial::class)->findOneBy(
+                    ['path' => $dir]
+                );
+                if ($cm == null && !in_array($dir, $new_paths)) {
+                    $details['type'][$i] = CourseMaterial::DIR;
+                    $details['path'][$i] = $dir;
+                    $i--;
+                    $new_paths[] = $dir;
                 }
             }
         }
 
-        FileUtils::writeJsonFile($fp, $json);
-        return $this->core->getOutput()->renderResultMessage("Successfully uploaded!", true);
+        foreach ($details['type'] as $key => $value) {
+            $course_material = new CourseMaterial(
+                $value,
+                $details['path'][$key],
+                DateUtils::parseDateTime($details['release_date'], $this->core->getDateTimeNow()->getTimezone()),
+                $details['hidden_from_students'],
+                $details['priority']
+            );
+            $this->core->getCourseEntityManager()->persist($course_material);
+            if ($details['section_lock']) {
+                foreach ($details['sections'] as $section) {
+                    $course_material_section = new CourseMaterialSection($section, $course_material);
+                    $course_material->addSection($course_material_section);
+                }
+            }
+        }
+        $this->core->getCourseEntityManager()->flush();
+        return JsonResponse::getSuccessResponse("Successfully uploaded!");
     }
 }

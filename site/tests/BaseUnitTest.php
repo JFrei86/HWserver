@@ -9,6 +9,7 @@ use app\libraries\Utils;
 use app\libraries\Access;
 use app\models\Config;
 use app\models\User;
+use Doctrine\ORM\EntityManager;
 use ReflectionException;
 
 class BaseUnitTest extends \PHPUnit\Framework\TestCase {
@@ -110,6 +111,12 @@ class BaseUnitTest extends \PHPUnit\Framework\TestCase {
             }));
         }
         $core->method('getQueries')->willReturn($mock_queries);
+
+        $course_entity_manger = $this->createMock(EntityManager::class);
+        $core->method('getCourseEntityManager')->willReturn($course_entity_manger);
+
+        $submitty_entity_manager = $this->createMock(EntityManager::class);
+        $core->method('getSubmittyEntityManager')->willReturn($submitty_entity_manager);
 
         if (!isset($user_config['no_user'])) {
             /** @noinspection PhpUnhandledExceptionInspection */

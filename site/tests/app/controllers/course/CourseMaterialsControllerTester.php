@@ -2,30 +2,33 @@
 
 namespace tests\app\controllers\course;
 
-use tests\BaseUnitTest;
 use app\controllers\course\CourseMaterialsController;
+use app\entities\course\CourseMaterialSection;
 use app\libraries\FileUtils;
 use app\libraries\Utils;
+use app\entities\course\CourseMaterial;
+use Doctrine\ORM\EntityRepository;
+use phpmock\phpunit\PHPMock;
+use tests\BaseUnitTest;
 use ZipArchive;
 
 class CourseMaterialsControllerTester extends BaseUnitTest {
-    use \phpmock\phpunit\PHPMock;
+    use PHPMock;
 
     private $core;
     private $config;
-    private $json_path;
     private $upload_path;
+    private $course_material;
 
     public function setUp(): void {
         $this->config = [];
         $this->config['course_path'] = FileUtils::joinPaths(sys_get_temp_dir(), Utils::generateRandomString());
         $this->config['use_mock_time'] = true;
         $_POST['csrf_token'] = "";
-        $this->core = $this->createMockCore($this->config);
+        $this->core = $this->createMockCore($this->config, [], [], ["path.write"]);
         $_POST['release_time'] = $this->core->getDateTimeNow()->format("Y-m-d H:i:sO");
 
         FileUtils::createDir($this->core->getConfig()->getCoursePath() . "/uploads/course_materials", true);
-        $this->json_path = $this->core->getConfig()->getCoursePath() . '/uploads/course_materials_file_data.json';
         $this->upload_path = $this->core->getConfig()->getCoursePath() . "/uploads/course_materials";
     }
 
@@ -81,34 +84,67 @@ class CourseMaterialsControllerTester extends BaseUnitTest {
         return $files;
     }
 
+    public function buildCourseMaterial(string $name): CourseMaterial {
+        $details = [
+            'path' => $this->upload_path . $name,
+            'hidden_from_students' => false,
+            'priority' => 0,
+            'release_date' => $this->core->getDateTimeNow(),
+            'type' => 0
+        ];
+        return new CourseMaterial(
+            CourseMaterial::FILE,
+            $this->upload_path . $name,
+            $this->core->getDateTimeNow(),
+            false,
+            0
+        );
+    }
+
     public function testCourseMaterialsUpload() {
         $this->getFunctionMock('app\controllers\course', 'is_uploaded_file')
             ->expects($this->any())
             ->willReturn(true);
 
-        $controller = new CourseMaterialsController($this->core);
-
         $name = "foo.txt";
         file_put_contents($this->upload_path . "/" .  $name, 'a');
         $this->buildFakeFile($name);
 
+        $course_material = $this->buildCourseMaterial("/$name");
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('persist')
+            ->with($course_material);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('findOneBy')
+            ->willReturn(null);
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
+        $_POST['requested_path'] = '';
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
+
+        $controller = new CourseMaterialsController($this->core);
+
         $ret = $controller->ajaxUploadCourseMaterialsFiles();
 
-        $json = FileUtils::readJsonFile($this->json_path);
-        //we need to check that the file exists in the correct folder and also the JSON file
-        $filename_full = FileUtils::joinPaths($this->upload_path, $name);
-        $expected_json = [
-            $filename_full => [
-                "release_datetime" => $_POST['release_time'],
-                'hide_from_students' => null,
-                'external_link' => false,
-                'sort_priority' => 0
-            ]
-        ];
-        $this->assertEquals($expected_json, $json);
-        //check the uploads directory now
-        $files = FileUtils::getAllFiles($this->upload_path, [], true);
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
 
+        $filename_full = FileUtils::joinPaths($this->upload_path, $name);
+        $files = FileUtils::getAllFiles($this->upload_path, [], true);
         $expected_files = [
             $name => [
                 'name' => $name,
@@ -117,7 +153,6 @@ class CourseMaterialsControllerTester extends BaseUnitTest {
                 'relative_name' => $name
             ]
         ];
-
         $this->assertEquals($expected_files, $files);
     }
 
@@ -126,32 +161,56 @@ class CourseMaterialsControllerTester extends BaseUnitTest {
             ->expects($this->any())
             ->willReturn(true);
 
+        $names = [
+            $this->core->getConfig()->getCoursePath() . '/test0.txt',
+            $this->core->getConfig()->getCoursePath() . '/test1.txt',
+            $this->core->getConfig()->getCoursePath() . '/lev0/test0.txt',
+            $this->core->getConfig()->getCoursePath() . '/lev0/test1.txt'
+        ];
+
+        $course_materials = [];
+        foreach ($names as $name) {
+            $course_materials[] = $this->buildCourseMaterial($name);
+        }
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(8))
+            ->method('persist')
+            ->withConsecutive([$course_materials[0]], [$course_materials[1]], [$course_materials[2]], [$course_materials[3]]);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->exactly(19))
+            ->method('findOneBy')
+            ->willReturn(null);
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(19))
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
         $controller = new CourseMaterialsController($this->core);
 
         $_FILES = [];
         $_POST['expand_zip'] = 'on';
         //create a zip file of depth = 2 with 2 files in each level.
         $fake_files = $this->buildFakeZipFile('foo.zip', 1, 2, 2);
-        $ret = $controller->ajaxUploadCourseMaterialsFiles();
-        $json = FileUtils::readJsonFile($this->json_path);
+        $_POST['requested_path'] = '';
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
 
-        $expected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
-        $this->assertEquals($expected_ret, $ret);
+        $ret = $controller->ajaxUploadCourseMaterialsFiles();
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
 
         $files = FileUtils::getAllFiles($this->upload_path, [], true);
         $this->assertEquals(4, count($files));
 
         $f1 = Utils::getFirstArrayElement($files);
-        $keys =     array_keys($json);
-
-        $expected_json1 = [
-            'release_datetime' => $_POST['release_time'],
-            'hide_from_students' => null,
-            'external_link' => false,
-            'sort_priority' => 0
-        ];
-
-        $this->assertEquals($expected_json1, $json[$keys[1]]);
         $expected_files1 = [
             'name' => 'test0.txt',
             'path' => $this->upload_path . $this->config['course_path'] . '/lev0/test0.txt',
@@ -169,72 +228,118 @@ class CourseMaterialsControllerTester extends BaseUnitTest {
         $this->getFunctionMock('app\controllers\course', 'is_uploaded_file')
             ->expects($this->any())
             ->willReturn(true);
-        $controller = new CourseMaterialsController($this->core);
 
         $_FILES = [];
 
-        //create a file
         $name = "foo.txt";
-        file_put_contents($this->upload_path . "/" .  $name, 'a');
+        file_put_contents($this->upload_path . "/" . $name, 'a');
         $this->buildFakeFile($name);
 
-        //'upload it'
+        $course_material = $this->buildCourseMaterial("/$name");
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('persist')
+            ->with($course_material);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->exactly(2))
+            ->method('findOneBy')
+            ->with(['path' => $this->upload_path . "/" . $name])
+            ->willReturnOnConsecutiveCalls(null, $course_material);
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
+        $controller = new CourseMaterialsController($this->core);
+
+        $_POST['requested_path'] = '';
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
+
         $ret = $controller->ajaxUploadCourseMaterialsFiles();
-        $json = FileUtils::readJsonFile($this->json_path);
-
-        $expected_json = [
-            $this->upload_path . "/" . $name => [
-                'release_datetime' => $_POST['release_time'],
-                'hide_from_students' => null,
-                'external_link' => false,
-                'sort_priority' => 0
-            ]
-        ];
-
-        $this->assertEquals($expected_json, $json);
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
 
         $_POST['fn'][] = FileUtils::joinPaths($this->upload_path, $name);
         $new_date = new \DateTime('2005-01-01');
-        $new_date = $new_date->format('Y-m-d H:i:sO');
 
-        $ret = $controller->modifyCourseMaterialsFileTimeStamp($_POST['fn'][0], $new_date);
+        $course_material->setReleaseDate($new_date);
 
-        $this->assertEquals(['status' => 'success', 'data' => 'Time successfully set.'], $ret);
-        $json = FileUtils::readJsonFile($this->json_path);
+        $ret = $controller->modifyCourseMaterialsFileTimeStamp($_POST['fn'][0], $new_date->format('Y-m-d H:i:sO'));
+        $exptected_ret = ['status' => 'success', 'data' => 'Time successfully set.'];
+        $this->assertEquals($exptected_ret, $ret->json);
+    }
 
-        //check the date has been updated to the new time
-        $expected_json = [
-            $this->upload_path . "/" . $name => [
-                'release_datetime' => $new_date,
-                'hide_from_students' => null,
-                'external_link' => false,
-            ]
-        ];
-
-        $this->assertEquals($expected_json, $json);
+    /**
+     * @runInSeparateProcess
+     */
+    public function testUpdateCourseMaterial() {
+        $this->getFunctionMock('app\controllers\course', 'is_uploaded_file')
+            ->expects($this->any())
+            ->willReturn(true);
 
         $_FILES = [];
-        //try multiple
-        //create a file
-        $name = "foo2.txt";
-        file_put_contents($this->upload_path . "/" .  $name, 'a');
+
+        $name = "foo.txt";
+        file_put_contents($this->upload_path . "/" . $name, 'a');
         $this->buildFakeFile($name);
 
-        //'upload it'
+        $course_material = $this->buildCourseMaterial("/$name");
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('persist')
+            ->with($course_material);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->exactly(2))
+            ->method('findOneBy')
+            ->with(['path' => $this->upload_path . "/" . $name])
+            ->willReturnOnConsecutiveCalls(null, $course_material);
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
+        $controller = new CourseMaterialsController($this->core);
+
+        $_POST['requested_path'] = '';
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
+
         $ret = $controller->ajaxUploadCourseMaterialsFiles();
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
 
-        $_POST['fn'][] = FileUtils::joinPaths($this->upload_path, $name);
-        $ret = $controller->modifyCourseMaterialsFileTimeStamp($_POST['fn'], $new_date);
+        $_POST = [];
 
-        $json = FileUtils::readJsonFile($this->json_path);
-        $this->assertEquals(2, count($json));   //2 files
+        $_POST['sections'] = '1,2';
+        $_POST['sections_lock'] = "true";
+        $_POST['requested_path'] = FileUtils::joinPaths($this->upload_path, $name);
 
-        $expected_json2 = [
-            'release_datetime' => $new_date,
-            'hide_from_students' => null,
-            'external_link' => false,
-        ];
-        $this->assertEquals($expected_json2, $json[$_POST['fn'][1]]);
+        $sections = ['1', '2'];
+        foreach ($sections as $section) {
+            $course_material_section = new CourseMaterialSection($section, $course_material);
+            $course_material->addSection($course_material_section);
+        }
+
+        $ret = $controller->ajaxEditCourseMaterialsFiles();
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
     }
 
     /**
@@ -245,57 +350,119 @@ class CourseMaterialsControllerTester extends BaseUnitTest {
             ->expects($this->any())
             ->willReturn(true);
 
-        $controller = new CourseMaterialsController($this->core);
-
         $_FILES = [];
 
         //create a file
         $name = "foo.txt";
         file_put_contents($this->upload_path . "/" .  $name, 'a');
         $this->buildFakeFile($name);
-        //'upload it'
-        $ret = $controller->ajaxUploadCourseMaterialsFiles();
 
-        $dir = 'course_materials';
+        $course_material = $this->buildCourseMaterial("/$name");
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('persist')
+            ->with($course_material);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->once())
+            ->method('findOneBy')
+            ->with(['path' => $this->upload_path . "/" . $name])
+            ->willReturnOnConsecutiveCalls(null, $course_material);
+        $repository
+            ->expects($this->once())
+            ->method('findAll')
+            ->willReturn([$course_material]);
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(2))
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
+        $controller = new CourseMaterialsController($this->core);
+
+        $_POST['requested_path'] = '';
+        $_POST['sections_lock'] = false;
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
+
+        $controller->ajaxUploadCourseMaterialsFiles();
+
         $path = $this->upload_path . "/" . $name;
 
         $this->core->getAccess()->method('resolveDirPath')->willReturn($path);
-        $controller->deleteCourseMaterial($this->upload_path . "/" . $name);
 
-        //check that the file no longer exists in the path and json file
-        $json = FileUtils::readJsonFile($this->json_path);
-        $this->assertEquals([], $json);
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('remove')
+            ->with($course_material);
+
+        $controller->deleteCourseMaterial($path);
 
         $files = FileUtils::getAllFiles($this->upload_path);
         $this->assertEquals(0, count($files));
     }
 
     public function testRequestedPathUpload() {
-         $this->getFunctionMock('app\controllers\course', 'is_uploaded_file')
+        $this->getFunctionMock('app\controllers\course', 'is_uploaded_file')
             ->expects($this->any())
             ->willReturn(true);
-
-        $controller = new CourseMaterialsController($this->core);
-        $_FILES = [];
-        $_POST['requested_path'] = 'foo/foo2';
 
         $name = "foo.txt";
         file_put_contents($this->upload_path . "/" .  $name, 'a');
         $this->buildFakeFile($name);
 
-        $ret = $controller->ajaxUploadCourseMaterialsFiles();
-        $json = FileUtils::readJsonFile($this->json_path);
+        $_POST['requested_path'] = 'foo/foo2';
+        $_POST['sections_lock'] = false;
+        $_POST['hide_from_students'] = false;
+        $_POST['sort_priority'] = 0;
 
-        $filename_full = FileUtils::joinPaths($this->upload_path, "foo/foo2", $name);
-        $expected_json = [
-            $filename_full => [
-                "release_datetime" => $_POST['release_time'],
-                "hide_from_students" => null,
-                'external_link' => false,
-                'sort_priority' => 0
+        $course_material = $this->buildCourseMaterial("/foo/foo2/$name");
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('persist')
+            ->with($course_material);
+
+        $this->core->getCourseEntityManager()
+            ->expects($this->once())
+            ->method('flush');
+
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->exactly(3))
+            ->method('findOneBy')
+            ->withConsecutive([['path' => $this->upload_path . '/foo/foo2/foo.txt']], [['path' => $this->upload_path . "/foo/foo2"]], [['path' => $this->upload_path . "/foo"]])
+            ->willReturnOnConsecutiveCalls(null, $course_material, $course_material);
+        $this->core->getCourseEntityManager()
+            ->expects($this->exactly(3))
+            ->method('getRepository')
+            ->with(CourseMaterial::class)
+            ->willReturn($repository);
+
+        $controller = new CourseMaterialsController($this->core);
+
+        $ret = $controller->ajaxUploadCourseMaterialsFiles();
+
+        $exptected_ret = ['status' => 'success', 'data' => 'Successfully uploaded!'];
+        $this->assertEquals($exptected_ret, $ret->json);
+
+        $filename_full = FileUtils::joinPaths($this->upload_path, 'foo/foo2', $name);
+        $files = FileUtils::getAllFiles($this->upload_path, [], true);
+        $newname = 'foo/foo2/' . $name;
+        $expected_files = [
+            $newname => [
+                'name' => $name,
+                'path' => $filename_full,
+                'size' => filesize($filename_full),
+                'relative_name' => $newname
             ]
         ];
-
-        $this->assertEquals($expected_json, $json);
+        $this->assertEquals($expected_files[$newname], $files[$newname]);
     }
 }

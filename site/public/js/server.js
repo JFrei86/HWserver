@@ -270,6 +270,19 @@ function newUploadCourseMaterialsForm() {
 
 }
 
+function newEditCourseMaterialsFolderForm(path, dir) {
+    let form = $('#edit-course-materials-folder-form');
+
+    $('#hide-materials-checkbox-edit', form).prop('checked', false);
+    $('#material-folder-edit-form', form).attr('data-directory', path);
+    $("#show-some-section-selection-edit", form).hide();
+    $("#all-sections-showing-yes", form).prop('checked',false);
+    $("#all-sections-showing-no", form).prop('checked',true);
+    $('#edit-folder-sort', form).attr('value', dir);
+    form.css("display", "block");
+    captureTabInModal("edit-course-materials-folder-form");
+}
+
 function newEditCourseMaterialsForm(path, dir, this_file_section, this_hide_from_students, release_time) {
 
     let form = $("#edit-course-materials-form");
@@ -278,7 +291,7 @@ function newEditCourseMaterialsForm(path, dir, this_file_section, this_hide_from
 
     element._flatpickr.setDate(release_time);
 
-    if(this_hide_from_students == "on"){
+    if(this_hide_from_students === "1"){
         $("#hide-materials-checkbox-edit", form).prop('checked',true);
     }
 

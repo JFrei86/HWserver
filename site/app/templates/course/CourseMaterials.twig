@@ -17,7 +17,7 @@
                         "{{ file }}",
                     {% endfor %}]
                     )'
-                class="btn btn-primary key_to_click {{ fileReleaseDates[folderPath] is not defined ? 'disabled' }} "
+                class="btn btn-primary key_to_click {% if not materials_exist %}disabled{% endif %}"
                 tabindex="0">Set All Release Dates</a>
             <a onclick="newUploadCourseMaterialsForm()" class="btn btn-primary key_to_click" tabindex="0">Upload Course Materials</a>
         </div>
@@ -44,33 +44,32 @@
         </ul>
     {% endif %}
     <div class="inner-container" id="file-container">
-        {{ _self.display_files(submissions, fileReleaseDates, "s", 0, "submissions", userGroup, uploadFolderPath, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, "", authorized_by_allow_list) }}
+        {{ _self.display_files(submissions, fileReleaseDates, "s", 0, "submissions", userGroup, uploadFolderPath, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, "") }}
 
     </div>
 </div>
 
-{% macro display_files(files, fileReleaseDates, id, indent, title, userGroup, folderPath, inDir, display_file_url,user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir, authorized_by_allow_list) %}
+{% macro display_files(files, fileReleaseDates, id, indent, title, userGroup, folderPath, inDir, display_file_url,user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir) %}
     {# Files on top #}
     {% for dir, path in files %}
         {% if path is not iterable %}
-            {{ _self.display_file(dir, fileReleaseDates, path, id ~ "f" ~ loop.index, indent, title, userGroup, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir ~ "/" ~ dir, authorized_by_allow_list) }}
+            {{ _self.display_file(dir, fileReleaseDates, path, id ~ "f" ~ loop.index, indent, title, userGroup, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir ~ "/" ~ dir) }}
         {% else %}
-            {{ _self.display_dir(dir, fileReleaseDates, path, id ~ "d" ~ loop.index, indent, title, userGroup, folderPath ~ '/' ~ dir,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir ~ "/" ~ dir, authorized_by_allow_list) }}
+            {{ _self.display_dir(dir, fileReleaseDates, path, id ~ "d" ~ loop.index, indent, title, userGroup, folderPath ~ '/' ~ dir,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir ~ "/" ~ dir) }}
         {% endif %}
     {% endfor %}
 {% endmacro %}
 
 
-{% macro display_file(dir, fileReleaseDates, path, id, indent, title, userGroup, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir, authorized_by_allow_list) %}
+{% macro display_file(dir, fileReleaseDates, path, id, indent, title, userGroup, inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir) %}
     {% set this_file_section = file_sections[path] is defined ? file_sections[path] : null %}
     {% set this_hide_from_students = hide_from_students[path] %}
     {% set this_external_link = external_link[path] is defined ? external_link[path] : null %}
 
     {% set greater_than_student = userGroup < 4 %}
     {% set visible_to_student =
-        this_hide_from_students == 'off' and
-        (this_file_section is null or user_section in this_file_section) and
-        authorized_by_allow_list[path]
+        not this_hide_from_students and
+        (this_file_section is null or user_section in this_file_section)
     %}
 
     {% if greater_than_student or visible_to_student %}
@@ -93,7 +92,7 @@
             {% endif %}
             {% if userGroup == 1 %}
 
-               <a class="key_to_click" tabindex="0" onclick='newEditCourseMaterialsForm("{{ path }}", "{{ priorities[recursiveDir] }}", {{this_file_section|json_encode|raw}}, "{{this_hide_from_students}}", "{{ fileReleaseDates[path]}}")'> <i class="fas fa-pencil-alt black-btn" aria-hidden="true" style="font-size: 16px; margin: 5px;"></i></a>
+               <a class="key_to_click" tabindex="0" onclick='newEditCourseMaterialsForm("{{ path }}", "{{ priorities[path] }}", {{this_file_section|json_encode|raw}}, "{{this_hide_from_students}}", "{{ fileReleaseDates[path]}}")'> <i class="fas fa-pencil-alt black-btn" aria-hidden="true" style="font-size: 16px; margin: 5px;"></i></a>
 
                <a class="key_to_click" tabindex="0" onclick='newDeleteCourseMaterialForm("{{ path | url_encode }}", "{{ dir }}");' aria-label="Delete {{ dir }}"> <i class="fas fa-trash" title="Delete the file" style="font-size: 16px; margin: 5px;"></i></a>
                 <label for="date_to_release_{{ id }}">Share to student on</label>
@@ -151,9 +150,9 @@
     {% endif %}
 {% endmacro %}
 
-{% macro display_dir(dir, fileReleaseDates, contents, id, indent, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir, authorized_by_allow_list) %}
+{% macro display_dir(dir, fileReleaseDates, contents, id, indent, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir) %}
     {% if indent == 0 %}
-        {{ _self.display_files(contents, fileReleaseDates, id, indent + 1, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir, authorized_by_allow_list) }}
+        {{ _self.display_files(contents, fileReleaseDates, id, indent + 1, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir) }}
     {% else %}
     <div class="folder-container">
 
@@ -165,7 +164,7 @@
             </a>
             <a onclick='downloadCourseMaterialZip("{{ dir }}", "{{ folderPath | url_encode }}")' aria-label="Download the folder: {{ dir }}" class="key_to_click" tabindex="0"><i class="fas fa-download" title="Download the folder"></i></a>
             {% if userGroup == 1 %}
-                <a class="key_to_click" tabindex="0" onclick='newEditCourseMaterialsForm("{{ folderPath }}", "{{ priorities[recursiveDir] }}", null, "off", "")'> <i class="fas fa-pencil-alt black-btn" aria-hidden="true" style="font-size: 16px; margin: 5px;"></i></a>
+                <a class="key_to_click" tabindex="0" onclick='newEditCourseMaterialsFolderForm("{{ folderPath }}", "{{ priorities[folderPath] }}")'> <i class="fas fa-pencil-alt black-btn" aria-hidden="true" style="font-size: 16px; margin: 5px;"></i></a>
                 <a class="key_to_click" tabindex="0" onclick='newDeleteCourseMaterialForm("{{ folderPath | url_encode  }}", "{{ dir }}");'> <i class="fas fa-trash" aria-hidden="true" style="font-size: 16px; margin: 5px;"></i></a>
                 {# button to choose release date for all files in folder and subfolders #}
                 <a onclick='setFolderRelease("{{ folderPath }}","","{{ id }}",
@@ -181,7 +180,7 @@
 
             {# Recurse #}
 
-            {{ _self.display_files(contents, fileReleaseDates, id, indent + 1, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir, authorized_by_allow_list) }}
+            {{ _self.display_files(contents, fileReleaseDates, id, indent + 1, title, userGroup, folderPath,inDir, display_file_url, user_section, file_sections, hide_from_students, external_link, priorities, recursiveDir) }}
 
         </div>
     </div>
@@ -301,4 +300,5 @@
 {% include('course/SetFolderReleaseForm.twig') %}
 {% include 'course/UploadCourseMaterialsForm.twig' with {reg_sections: reg_sections} %}
 {% include 'course/EditCourseMaterialsForm.twig' %}
+{% include 'course/EditCourseMaterialsFolderForm.twig' %}
 {% include('course/DeleteCourseMaterialForm.twig') %}

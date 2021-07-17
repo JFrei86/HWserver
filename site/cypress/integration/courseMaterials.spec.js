@@ -190,18 +190,18 @@ describe('Test cases revolving around course material uploading and access contr
         cy.get('[onclick=\'setCookie("foldersOpen",openAllDivForCourseMaterials());\']').click();
         cy.get('.file-viewer').should('have.length', 23);
 
-        cy.get('#file-container .btn').eq(9).click();
+        cy.get('#file-container .btn').eq(3).click();
         cy.get('#date_to_release').clear().type('2021-06-29 21:37:53');
         cy.get('#submit_time').click();
 
         cy.reload();
 
-        for (let i = 0; i < 17; i++){
-            cy.get('[name="release_date"]').eq(i).should('have.value', '9998-01-01 00:00:00');
+        for (let i = 0; i < 6; i++) {
+            cy.get('[name="release_date"]').eq(i).should('have.value', '2021-06-29 21:37:53');
         }
 
-        for (let i = 17; i < 22; i++){
-            cy.get('[name="release_date"]').eq(i).should('have.value', '2021-06-29 21:37:53');
+        for (let i = 6; i < 22; i++) {
+            cy.get('[name="release_date"]').eq(i).should('have.value', '9998-01-01 00:00:00');
         }
 
         cy.logout();
