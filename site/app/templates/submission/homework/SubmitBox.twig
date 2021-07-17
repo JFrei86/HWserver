@@ -63,7 +63,6 @@
     {% if show_no_late_submission_warning %}
         <i class="red-message">Warning, you are making a late submission for a gradeable without late submissions enabled!</i>
     {% endif %}
-
     {# Admin submission type selector #}
     {% if core.getUser().accessFullGrading() %}
         <form id="submission-form" method="post">
@@ -312,7 +311,10 @@
                             Drag your file(s) here or click to open file browser
                         {% endif %}
                     </h2>
-                    <input type="file" name="files" id="input-file{{ loop.index }}" class="hide" onchange="addFilesFromInput({{ loop.index }})" multiple aria-label="Select Files to upload" />
+                    <input type="file" name="files" id="input-file{{ loop.index }}" class="hide" onchange="addFilesFromInput({{ loop.index }})" multiple aria-label="Select Files to upload"
+                            {% if viewing_inactive_version %}
+                                disabled="disabled"
+                            {% endif %}/>
                     <table class="file-upload-table" id="file-upload-table-{{ loop.index }}">
                       <tr style="background:transparent; display:none;">
                         <th>File Name:</th>
@@ -336,15 +338,16 @@
             </form>
         {% endif %}
         {# /Page selector #}
-
-        <div class="upload-message">
-            {% include "misc/Markdown.twig" with {
-                "content" : upload_message
-            } only %}
-        </div>
-            <button type="button" id="submit" class="btn btn-success">
-                {{ viewing_inactive_version ? 'Switch To Most Recent Version To Make New Submission' : 'Submit' }}
-            </button>
+        {% if can_student_submit %}
+            <div class="upload-message">
+                {% include "misc/Markdown.twig" with {
+                    "content" : upload_message
+                } only %}
+            </div>
+                <button type="button" id="submit" class="btn btn-success">
+                    {{ viewing_inactive_version ? 'Switch To Most Recent Version To Make New Submission' : 'Submit' }}
+                </button>
+        {% endif %}
         {% if part_names is not empty %}
             <button type="button" id="startnew" class="btn btn-primary">Clear</button>
 

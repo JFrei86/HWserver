@@ -1623,7 +1623,7 @@ class Gradeable extends AbstractModel {
      * Gets if students can make submissions at this time
      * @return bool
      */
-    public function canStudentSubmit() {
+    public function canStudentSubmit(): bool {
         return $this->isStudentSubmit() && $this->isSubmissionOpen() &&
             (!$this->isSubmissionClosed() || $this->isLateSubmissionAllowed());
     }
