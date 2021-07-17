@@ -226,12 +226,12 @@
                         {% if file.part == num_file_submissions %}
                             <div>
                                 <div class="file-viewer">
-                                    <a class='openAllFilesubmissions openable-element-submissions key_to_click' file-url="{{ file.path|url_encode }}" onclick='openFrame({% if is_grader_view %}"{{ file.name|e('js') }}", "{{ file.path|e('js') }}", "{{ id }}", false{% else %}"{{ file.path|e('js') }}", "{{ id }}", "{{ file.name|e('js') }}", true{% endif %}); {% if is_grader_view %}updateCookies();{% endif %}'>
+                                    <a class='openAllFilesubmissions openable-element-submissions key_to_click' file-url="{{ file.path|url_encode }}" onclick='openFrame({% if is_grader_view %}"{{ file.name|url_encode|e('js') }}", "{{ file.path|url_encode|e('js') }}", "{{ id }}", false{% else %}"{{ file.path|url_encode|e('js') }}", "{{ id }}", "{{ file.name|url_encode|e('js') }}", true{% endif %}); {% if is_grader_view %}updateCookies();{% endif %}'>
                                         <span class="fas fa-plus-circle" style='vertical-align:text-bottom;'></span>
                                         {{ file.name }}</a> &nbsp;
                                     <a id = 'open_file_{{ file.name|url_encode }}' onclick='popOutSubmittedFile("{{ file.name|url_encode }}", "{{ file.path|url_encode }}")' aria-label="Pop up the file in a new window" class="key_to_click" tabindex="0"><i class="fas fa-window-restore" title="Pop up the file in a new window"></i></a>
                                     {% if is_grader_view %}
-                                    <a onclick='viewFileFullPanel("{{ file.name|e('js') }}", "{{ file.path|e('js') }}", 0, "notebook")' aria-label="Show file in full panel" class="key_to_click" tabindex="0"><i class="fas fa-share" title="Show file in full panel"></i></a>
+                                    <a onclick='viewFileFullPanel("{{ file.name|url_encode|e('js') }}", "{{ file.path|url_encode|e('js') }}", 0, "notebook")' aria-label="Show file in full panel" class="key_to_click" tabindex="0"><i class="fas fa-share" title="Show file in full panel"></i></a>
                                     {% endif %}
                                     <a onclick='downloadFile("{{ file.path|url_encode }}", "submissions")' aria-label="Download the file" class="key_to_click" tabindex="0"><i class="fas fa-download" title="Download the file"></i></a>
                                 </div>

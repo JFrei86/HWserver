@@ -128,7 +128,7 @@ class MiscController extends AbstractController {
             }
         }
 
-        $file_name = basename(rawurldecode(htmlspecialchars_decode($path)));
+        $file_name = basename($path);
         $corrected_name = pathinfo($path, PATHINFO_DIRNAME) . "/" .  $file_name;
         $mime_type = mime_content_type($corrected_name);
         $file_type = FileUtils::getContentType($file_name);
