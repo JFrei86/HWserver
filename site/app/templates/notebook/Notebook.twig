@@ -235,7 +235,7 @@
                                     {% endif %}
                                     <a onclick='downloadFile("{{ file.path|url_encode }}", "submissions")' aria-label="Download the file" class="key_to_click" tabindex="0"><i class="fas fa-download" title="Download the file"></i></a>
                                 </div>
-                                <div id="file_viewer_{{ id }}" style="margin-left: -15px" data-file_name="{{ file.name }}" data-file_url="{{ file.path }}"></div>
+                                <div id="file_viewer_{{ id }}" data-file_name="{{ file.name }}" data-file_url="{{ file.path }}"></div>
                             </div>
                         {% endif %}
                     {% endfor %}

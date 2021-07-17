@@ -1395,6 +1395,66 @@ function newEditPeerComponentsForm() {
   captureTabInModal("edit-peer-components-form");
 }
 
+function rotateImage(url, rotateBy) {
+  let rotate = sessionStorage.getItem("image-rotate-" + url);
+  if (rotate) {
+    rotate = parseInt(rotate);
+    if (rotate === NaN) {
+      rotate = 0;
+    }
+  } else {
+    rotate = 0;
+  }
+  if (rotateBy === "cw") {
+    rotate = (rotate + 90) % 360;
+  } else if (rotateBy === "ccw") {
+    rotate = (rotate - 90) % 360;
+  }
+  $('iframe[src="' + url + '"]').each(function() {
+    let img = $(this).contents().find('img');
+    if (img) {
+      if (rotate === 0) {
+        img.css("transform", "");
+      } else {
+        img.css("transform", "rotate(" + rotate + "deg)");
+      }
+      img.css("transform", "translateY(" + (-img.get(0).getBoundingClientRect().top) + "px) rotate(" + rotate + "deg)");
+      boundsHeight = -1;
+      if (rotate % 180 == 0) {
+        boundsHeight = img.parent().height();
+      } else {
+        boundsHeight = img.parent().width();
+      }
+      if ($(this).css("max-height").length !== 0 && parseInt($(this).css("max-height")) !== NaN) {
+        let height = parseInt($(this).css("max-height"));
+        $(this).height(boundsHeight > height ? height : boundsHeight);
+      } else {
+        $(this).height(boundsHeight > 500 ? 500 : boundsHeight);
+      }
+    }
+  });
+  sessionStorage.setItem("image-rotate-" + url, rotate);
+}
+
+function imageRotateIcons(iframe) {
+  let iframeTarget = $('iframe#' + iframe);
+  let contentType = iframeTarget.contents().get(0).contentType;
+  if (contentType != undefined && contentType.startsWith('image') && iframeTarget.parent().data("image-rotate-icons") !== true) {
+    iframeTarget.parent().data("image-rotate-icons", true);
+    iframeTarget.parent().css("margin-left", "");
+    iframeTarget.before(`<div class="image-rotate-icons-bar">
+                            <a class="image-rotate-icon" onclick="rotateImage('${iframeTarget.attr('src')}', 'ccw')">
+                            <i class="fas fa-undo" title="Rotate image counterclockwise"></i></a>
+                            <a class="image-rotate-icon" onclick="rotateImage('${iframeTarget.attr('src')}', 'cw')">
+                            <i class="fas fa-redo" title="Rotate image clockwise"></i></a>
+                            </div>`);
+    
+    if (sessionStorage.getItem("image-rotate-" + iframeTarget.attr("src"))) {
+      rotateImage(iframeTarget.attr("src"), "none");
+    }
+  }
+}
+
 function openFrame(html_file, url_file, num, pdf_full_panel=true, panel="submission") {
   let iframe = $('#file_viewer_' + num);
   let display_file_url = buildCourseUrl(['display_file']);
@@ -1424,7 +1484,7 @@ function openFrame(html_file, url_file, num, pdf_full_panel=true, panel="submiss
       let forceFull = url_file.substring(url_file.length - 3) === "pdf" ? 500 : -1;
       let targetHeight = iframe.hasClass("full_panel") ? 1200 : 500;
       let frameHtml = `
-        <iframe id="${iframeId}" onload="resizeFrame('${iframeId}', ${targetHeight}, ${forceFull});"
+        <iframe id="${iframeId}" onload="resizeFrame('${iframeId}', ${targetHeight}, ${forceFull}); imageRotateIcons('${iframeId}');"
                 src="${display_file_url}?dir=${encodeURIComponent(directory)}&file=${encodeURIComponent(html_file)}&path=${encodeURIComponent(url_file)}&ta_grading=true"
                 width="95%">
         </iframe>

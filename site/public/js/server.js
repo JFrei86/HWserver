@@ -837,12 +837,12 @@ function resizeFrame(id, max_height = 500, force_height=-1) {
         var height = max_height;
     }
     if (force_height != -1) {
-        document.getElementById(id).height = force_height + "px";
+        $("iframe#" + id).height(force_height);
     } else if (height >= max_height) {
-        document.getElementById(id).height= max_height + "px";
+        $("iframe#" + id).height(max_height);
     }
     else {
-        document.getElementById(id).height = (height+18) + "px";
+        $("iframe#" + id).height(height + 18);
     }
     //Workarounds for FireFox changing height/width of img sometime after this code runs
     if(img.length !== 0) {
