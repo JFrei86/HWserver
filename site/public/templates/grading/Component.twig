@@ -11,14 +11,14 @@ Required Input:
 
 {% if peer_panel %}
 <div id="peer-component-{{ component.id }}"
-     class="box">
+     class="box peer-score">
 {% else %}
 <div id="component-{{ component.id }}"
-     class="box component
-     {% if peer_component %}
-        peer-border
+    {% if peer_component %}
+        class="box peer-component component peer-border"
+    {% else %}
+       class="box component ta-component"
     {% endif %}
-    "
      data-component_id="{{ component.id }}"
      data-title="{{ component.title|escape }}"
      data-ta_comment="{{ component.ta_comment|escape }}"

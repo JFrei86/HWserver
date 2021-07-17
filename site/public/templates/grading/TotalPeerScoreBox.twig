@@ -1,0 +1,15 @@
+{% import "Functions.twig" as functions %}
+{#
+Required Parameters:
+-auto_grading_earned
+-auto_grading_total
+-ta_grading_earned
+-ta_grading_total
+
+#}
+<div class="box-title badge-container">
+        <strong id="score_total" class="badge {{ functions.getBadgeStyle(combined_peer_score,  peer_total,  peer_total) }}">
+            {{ combined_peer_score is defined ? (combined_peer_score)|round(decimal_precision) : '&minus;' }} / {{ peer_total|round(decimal_precision) }}
+        </strong>
+        <strong>Combined Peer Grading Total</strong>
+</div>

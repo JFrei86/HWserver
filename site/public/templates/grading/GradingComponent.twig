@@ -14,7 +14,7 @@ Required inputs:
 {% set show_verify_grader = can_verify_graders and graded_component is defined and graded_component.grader_id|length != 0 and grader_id != graded_component.grader_id and graded_component.verifier_id is not defined %}
 
 {% block component_click %}
-    {{ grading_disabled ? '' : 'onClickComponent(this)' }}
+    {{ grading_disabled ? '' : 'onClickComponent(this, true)' }}
 {% endblock %}
  
 {# This is causing a lot of console errros in edit gradeable #}

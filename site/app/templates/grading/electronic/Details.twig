@@ -328,9 +328,9 @@
     {% if graded_gradeable.getAutoGradedGradeable().getHighestVersion() == 0 %}
         <td></td>
     {% elseif graded_gradeable.getAutoGradedGradeable().getActiveVersion() == graded_gradeable.getAutoGradedGradeable().getHighestVersion() %}
-        <td>{{ graded_gradeable.getAutoGradedGradeable().getActiveVersion() }}</td>
+        <td style="text-align: center;">{{ graded_gradeable.getAutoGradedGradeable().getActiveVersion() }}</td>
     {% else %}
-        <td>{{ graded_gradeable.getAutoGradedGradeable().getActiveVersion() }} / {{ graded_gradeable.getAutoGradedGradeable().getHighestVersion() }}</td>
+        <td style="text-align: center;">{{ graded_gradeable.getAutoGradedGradeable().getActiveVersion() }} / {{ graded_gradeable.getAutoGradedGradeable().getHighestVersion() }}</td>
     {% endif %}
 {% endmacro %}
 
@@ -443,7 +443,7 @@
                 {% set contents = graded_gradeable.getTaGradedGradeable.getTotalScore(core.getUser()) ~ " / " ~ graded_gradeable.getGradeable().getPeerPoints() %}
                 {% set btn_class = "btn-default" %}
             {% elseif graded_gradeable.isTaGradingComplete() and core.getUser().getGroup() < 4 and graded_gradeable.isPeerGradingComplete() %}
-                {% set contents = graded_gradeable.getTaGradedGradeable.getTotalScore() ~ " / " ~ graded_gradeable.getGradeable().getManualGradingPoints() %}
+                {% set contents = graded_gradeable.getTaGradedGradeable.getTotalScore(core.getUser()) ~ " / " ~ graded_gradeable.getGradeable().getManualGradingPoints() %}
                 {% set btn_class = "btn-default" %}
 
 
@@ -458,7 +458,7 @@
         {% set contents = "View" %}
         {% set btn_class = "btn-primary" %}
     {% endif %}
-    <td>
+    <td style="text-align: center;">
         <a class="btn {{ btn_class }}" href="{{ context.grade_url }}?who_id={{ graded_gradeable.getSubmitter().getAnonId() }}&sort={{ context.sort }}&direction={{ context.direction }}">
             {{ contents }}
             {% if badge_count > 0 and graded_gradeable.getGradeable().isGradeInquiryPerComponentAllowed()%}

@@ -1282,19 +1282,18 @@ function getGradedComponentFromDOM(component_id) {
         custom_mark_enabled: CUSTOM_MARK_ID,
     };
 }
-
 /**
  * Gets the scores data from the DOM (auto grading earned/possible and ta grading possible)
  * @return {Object}
  */
 function getScoresFromDOM() {
     let dataDOMElement = $('#gradeable-scores-id');
-
-    // Get the TA grading scores
     let scores = {
         ta_grading_complete: getTaGradingComplete(),
         ta_grading_earned: getTaGradingEarned(),
         ta_grading_total: getTaGradingTotal(),
+        peer_grade_earned: getPeerGradingEarned(),
+        peer_total: getPeerGradingTotal(),
         auto_grading_complete: false
     };
 
@@ -1348,6 +1347,28 @@ function getTaGradingEarned() {
 }
 
 /**
+ * Gets the number of peer grading points the student has been awarded
+ * @return {number|undefined} Undefined if no score data exists
+ */
+function getPeerGradingEarned() {
+    let total = 0.0;
+    let anyPoints = false;
+    $('.peer-graded-component-data').each(function () {
+        let pointsEarned = $(this).attr('data-total_score');
+        if (pointsEarned === '') {
+            return;
+        }
+        total += parseFloat(pointsEarned);
+        anyPoints = true;
+    });
+    if (!anyPoints) {
+        return undefined;
+    }
+    return total;
+}
+
+
+/**
  * Gets if all components have a grade assigned
  * @return {boolean} If all components have at least one mark checked
  */
@@ -1369,7 +1390,29 @@ function getTaGradingComplete() {
  */
 function getTaGradingTotal() {
     let total = 0.0;
-    $('.component').each(function () {
+    $('.ta-component').each(function () {
+        total += parseFloat($(this).attr('data-max_value'));
+    });
+    return total;
+}
+/**
+ * Gets the number of Peer grading points that can be earned
+ * @return {number}
+ */
+function getPeerGradingTotal() {
+    let total = 0.0;
+    $('.peer-component').each(function () {
+        total += parseFloat($(this).attr('data-max_value'));
+    });
+    return total;
+}
+/**
+ * Gets the number of Peer points that were earned
+ * @return {number}
+ */
+function getPeerGradingScore() {
+    let total = 0.0;
+    $('.peer-score').each(function () {
         total += parseFloat($(this).attr('data-max_value'));
     });
     return total;
@@ -1838,10 +1881,11 @@ function onGetMarkStats(me) {
 /**
  * Called when a component gets clicked (for opening / closing)
  * @param me DOM Element of the component header div
+ * @param edit_mode editing from ta grading page or instructor edit gradeable page
  */
-function onClickComponent(me) {
+function onClickComponent(me, edit_mode = false) {
     let component_id = getComponentIdFromDOMElement(me);
-    toggleComponent(component_id, true)
+    toggleComponent(component_id, true, edit_mode)
         .catch(function (err) {
             console.error(err);
             setComponentInProgress(component_id, false);
@@ -1882,7 +1926,7 @@ function onCancelComponent(me) {
 
 function onCancelEditRubricComponent(me) {
   const component_id = getComponentIdFromDOMElement(me);
-  toggleComponent(component_id, false);
+  toggleComponent(component_id, false, true);
 }
 
 /**
@@ -2267,6 +2311,35 @@ function reloadGradingRubric(gradeable_id, anon_id) {
             alert("Could not render gradeable: " + err.message);
             console.error(err);
         });
+
+}
+/**
+ * Call this to update the totals and subtotals once a grader is done grading a component
+ * @param {string} gradeable_id
+ * @param {string} anon_id
+ * @return {Promise}
+ */
+
+function updateTotals(gradeable_id, anon_id) {
+    let gradeable_tmp = null;
+    return ajaxGetGradeableRubric(gradeable_id)
+        .catch(function (err) {
+            alert('Could not fetch gradeable rubric: ' + err.message);
+        })
+        .then(function (gradeable) {
+            gradeable_tmp = gradeable;
+            return ajaxGetGradedGradeable(gradeable_id, anon_id, false);
+        })
+        .catch(function (err) {
+            alert('Could not fetch graded gradeable: ' + err.message);
+        })
+        .then(function (graded_gradeable) {
+            return renderGradingGradeable(getGraderId(), gradeable_tmp, graded_gradeable,
+                isGradingDisabled(), canVerifyGraders(), getDisplayVersion());
+        })
+        .then(function (elements) {
+            setRubricDOMElements(elements);
+        });
 }
 
 /**
@@ -2341,6 +2414,7 @@ function reloadInstructorEditRubric(gradeable_id, itempool_available, itempool_o
 function reloadGradingComponent(component_id, editable = false, showMarkList = false) {
     let component_tmp = null;
     let gradeable_id = getGradeableId();
+    let graded_gradeable = ajaxGetGradedGradeable(gradeable_id, getAnonId(), false);
     return ajaxGetComponentRubric(gradeable_id, component_id)
         .then(function (component) {
             // Set the global mark list data for this component for conflict resolution
@@ -2377,16 +2451,17 @@ function openCookieComponent() {
 /**
  * Closes all open components and the overall comment
  * @param {boolean} save_changes
+ * @param {boolean} edit_mode editing from ta grading page or instructor edit gradeable page
  * @return {Promise<void>}
  */
-function closeAllComponents(save_changes) {
+function closeAllComponents(save_changes,edit_mode = false) {
     let sequence = Promise.resolve();
 
     // Close all open components.  There shouldn't be more than one,
     //  but just in case there is...
     getOpenComponentIds().forEach(function (id) {
         sequence = sequence.then(function () {
-            return closeComponent(id, save_changes);
+            return closeComponent(id, save_changes, edit_mode);
         });
     });
     return sequence;
@@ -2396,19 +2471,20 @@ function closeAllComponents(save_changes) {
  * Toggles the open/close state of a component
  * @param {int} component_id the component's id
  * @param {boolean} saveChanges
+ * @param {edit_mode} editing from ta grading page or instructor edit gradeable page
  * @return {Promise}
  */
-function toggleComponent(component_id, saveChanges) {
+function toggleComponent(component_id, saveChanges, edit_mode = false) {
     let action = Promise.resolve();
     // Component is open, so close it
     if (isComponentOpen(component_id)) {
         action = action.then(function() {
-            return closeComponent(component_id, saveChanges);
+            return closeComponent(component_id, saveChanges, edit_mode);
         });
     }
     else {
         action = action.then(function () {
-            return closeAllComponents(saveChanges)
+            return closeAllComponents(saveChanges,edit_mode)
                 .then(function () {
                     return openComponent(component_id);
                 });
@@ -2692,15 +2768,17 @@ function closeComponentGrading(component_id, saveChanges) {
         .then(function (graded_component) {
             return injectGradingComponent(component_tmp, graded_component, false, false);
         });
+
 }
 
 /**
  * Closes the requested component and saves any changes if requested
  * @param {int} component_id
  * @param {boolean} saveChanges If the changes to the (graded) component should be saved or discarded
+ * @param {boolean} edit_mode editing from ta grading page or instructor edit gradeable page
  * @return {Promise}
  */
-function closeComponent(component_id, saveChanges = true) {
+function closeComponent(component_id, saveChanges = true, edit_mode = false) {
     setComponentInProgress(component_id);
     // Achieve polymorphism in the interface using this `isInstructorEditEnabled` flag
     return (isInstructorEditEnabled()
@@ -2708,6 +2786,13 @@ function closeComponent(component_id, saveChanges = true) {
         : closeComponentGrading(component_id, saveChanges))
         .then(function () {
             setComponentInProgress(component_id, false);
+        })
+        .then(function () {
+            if (!edit_mode) {
+                let gradeable_id = getGradeableId();
+                let anon_id = getAnonId();
+                return updateTotals(gradeable_id, anon_id);
+            }
         });
 }
 
@@ -3180,9 +3265,6 @@ function injectGradingComponent(component, graded_component, editable, showMarkL
     return renderGradingComponent(getGraderId(), component, graded_component, isGradingDisabled(), canVerifyGraders(), getPointPrecision(), editable, showMarkList, getComponentVersionConflict(graded_component), student_grader, TA_GRADING_PEER, getAllowCustomMarks())
         .then(function (elements) {
             setComponentContents(component.id, elements);
-        })
-        .then(function () {
-            return refreshTotalScoreBox();
         });
 }
 

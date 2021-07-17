@@ -1,6 +1,9 @@
 {% import "Functions.twig" as functions %}
 
-<span class="graded-component-data"
+<span class=
+    {% if component.peer %}'peer-graded-component-data'
+    {% else %}'graded-component-data' 
+    {% endif %}
       data-total_score="{{ graded_component.total_score }}"
       data-graded_version="{{ graded_component.graded_version }}"
       data-grade_time="{{ graded_component.grade_time }}"
@@ -17,7 +20,7 @@
 </span>
 
 <span class="component-title col-no-gutters">
-    <b>{{ component.title|escape }}</b>
+    <b>{{ component.title|escape }} </b>
 </span>
 
 {% if component.page > 0 %}
@@ -35,7 +38,7 @@
         'cancel_on_click': 'onCancelComponent(this)'
     } only %}
 </span>
-{% if component_version_conflict and not grading_disabled %}
+{% if component_version_conflict is same as(1) and not grading_disabled %}
     <span class="version-warning col-5">
         Please edit or ensure that comments from version {{ graded_component.graded_version }} still apply.
     </span>

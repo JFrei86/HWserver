@@ -247,11 +247,35 @@ class TaGradedGradeable extends AbstractModel {
      * Gets the manual grading points the student earned
      * @return float
      */
-    public function getTotalScore($grader = null) {
+    public function getTotalScore($grader = null): float {
         $points_earned = 0.0;
         /** @var GradedComponentContainer $container */
         foreach ($this->graded_component_containers as $container) {
             $points_earned += $container->getTotalScore($grader);
+        }
+        return $points_earned;
+    }
+    /**
+     * Gets the instructor/ta score the student earned
+     * @return float
+     */
+    public function getTotalTaScore($grader = null): float {
+        $points_earned = 0.0;
+        /** @var GradedComponentContainer $container */
+        foreach ($this->graded_component_containers as $container) {
+            $points_earned += $container->getTotalTaScore($grader);
+        }
+        return $points_earned;
+    }
+    /**
+     * Gets the instructor/ta score for peer components that the student earned
+     * @return float
+     */
+    public function getTotalPeerScore($grader = null): float {
+        $points_earned = 0.0;
+        /** @var GradedComponentContainer $container */
+        foreach ($this->graded_component_containers as $container) {
+            $points_earned += $container->getTotalPeerScore($grader);
         }
         return $points_earned;
     }

@@ -24,6 +24,7 @@ function loadTemplates() {
         {id: 'Mark', href: "/templates/grading/Mark.twig"},
         {id: 'OverallComment', href: "/templates/grading/OverallComment.twig"},
         {id: 'TotalScoreBox', href: "/templates/grading/TotalScoreBox.twig"},
+        {id: 'TotalPeerScoreBox', href: "/templates/grading/TotalPeerScoreBox.twig"},
         {id: 'ConflictMarks', href: "/templates/grading/ConflictMarks.twig"},
         {id: 'RubricTotalBox', href: "/templates/grading/RubricTotalBox.twig"},
     ];
@@ -139,7 +140,7 @@ function renderGradingGradeable(grader_id, gradeable, graded_gradeable, grading_
         'decimal_precision': DECIMAL_PRECISION,
         'can_verify_graders': canVerifyGraders,
         'grader_id': grader_id,
-        'display_version': displayVersion
+        'display_version': displayVersion,
     });
 }
 
@@ -160,7 +161,7 @@ function renderPeerGradeable(grader_id, gradeable, graded_gradeable, grading_dis
         graded_gradeable.graded_components = {};
     }
 
-    var peer_details = {};
+    let peer_details = {};
 
     // Group together some useful data for rendering:
     gradeable.components.forEach(function(component) {

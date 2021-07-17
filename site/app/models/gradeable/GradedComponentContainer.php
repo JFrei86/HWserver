@@ -207,7 +207,7 @@ class GradedComponentContainer extends AbstractModel {
      *  to the precision of the gradeable
      * @return float
      */
-    public function getTotalScore(User $grader = null) {
+    public function getTotalScore(User $grader = null): float {
         $points_earned = 0.0;
         $number_of_graders = 0;
         // TODO: how should peer grades be calculated: now its an average
@@ -225,6 +225,57 @@ class GradedComponentContainer extends AbstractModel {
         // Note: clamp count(...) to be at least 1 so safeCalcPercent doesn't return NaN
         $points_earned = Utils::safeCalcPercent($points_earned, max(1, $number_of_graders));
         return NumberUtils::roundPointValue($points_earned, $this->ta_graded_gradeable->getGradedGradeable()->getGradeable()->getPrecision());
+    }
+
+    /**
+     * Gets the score the submitter received for this peer component, rounded
+     *  to the precision of the gradeable
+     * @return float
+     */
+    public function getTotalPeerScore(User $grader = null): float {
+        $points_earned = 0.0;
+        /** @var GradedComponent $graded_component */
+        foreach ($this->graded_components as $graded_component) {
+            // If there is a grader, we are only computing their total score rather than the total score for all graders
+            if ($grader !== null && $graded_component->getGrader()->getId() !== $grader->getId()) {
+                continue;
+            }
+            if ($graded_component->getGrader()->getGroup() < User::GROUP_STUDENT) {
+                if ($graded_component->isPeer()) {
+                    $points_earned += $graded_component->getTotalScore();
+                }
+            }
+        }
+
+        return $points_earned;
+    }
+
+    /**
+     * Gets the ta score the submitter received for this component, rounded
+     *  to the precision of the gradeable
+     * @return float
+     */
+    public function getTotalTaScore(User $grader = null): float {
+        $points_earned = 0.0;
+        $number_of_graders = 0;
+        // TODO: how should peer grades be calculated: now its an average
+        /** @var GradedComponent $graded_component */
+        foreach ($this->graded_components as $graded_component) {
+            // If there is a grader, we are only computing their total score rather than the total score for all peers.
+            if ($graded_component->getGrader()->getGroup() < User::GROUP_STUDENT) {
+                if ($graded_component->isPeer()) {
+                }
+                else {
+                    $points_earned += $graded_component->getTotalScore();
+                }
+            }
+            else {
+                $points_earned = 0;
+                $number_of_graders = 0;
+            }
+        }
+
+        return $points_earned;
     }
 
     /**

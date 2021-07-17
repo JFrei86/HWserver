@@ -24,12 +24,16 @@
 
 {# Total Box #}
     <div id="total-score-container">
-        {% include "TotalScoreBox.twig" with {
+        {% include "TotalPeerScoreBox.twig" with {
+            'user_group' : graded_gradeable.user_group,
+            'peer_total' : graded_gradeable.peer_total,
+            'peer_grade_earned' : graded_gradeable.see_peer_grade,
             'auto_grading_earned': graded_gradeable.auto_grading_earned,
             'auto_grading_total': graded_gradeable.auto_grading_total,
             'ta_grading_earned': graded_gradeable.ta_grading_earned,
             'ta_grading_total': graded_gradeable.ta_grading_total,
-            'decimal_precision': decimal_precision
+            'decimal_precision': decimal_precision,
+            'combined_peer_score' : graded_gradeable.combined_peer_score
         } only %}
     </div>
 {# /Total Box #}
