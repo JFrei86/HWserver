@@ -1,0 +1,69 @@
+{
+  "differences": [
+    {
+      "actual": {
+        "start": 2098
+      },
+      "expected": {
+        "line": [
+          {
+            "line_number": 2099
+          }
+        ],
+        "start": 2099
+      }
+    },
+    {
+      "actual": {
+        "start": 3197
+      },
+      "expected": {
+        "line": [
+          {
+            "line_number": 3199
+          }
+        ],
+        "start": 3199
+      }
+    },
+    {
+      "actual": {
+        "start": 4296
+      },
+      "expected": {
+        "line": [
+          {
+            "line_number": 4299
+          }
+        ],
+        "start": 4299
+      }
+    },
+    {
+      "actual": {
+        "start": 5395
+      },
+      "expected": {
+        "line": [
+          {
+            "line_number": 5399
+          }
+        ],
+        "start": 5399
+      }
+    },
+    {
+      "actual": {
+        "start": 5494
+      },
+      "expected": {
+        "line": [
+          {
+            "line_number": 5499
+          }
+        ],
+        "start": 5499
+      }
+    }
+  ]
+}

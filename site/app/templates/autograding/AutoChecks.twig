@@ -22,18 +22,18 @@
         </div>
         <div class="box-block">
             {% if not check.actual is defined and check.description is defined and check.messages is defined%}
-              <h4 style="margin-bottom: 0">{{ check.description }}</h4>
-              <div>
-              {{ self.render_messages(check.messages) }}
-              </div>
+               <h4 style="margin-bottom: 0">{{ check.description }}</h4>
+               <div>
+               {{ self.render_messages(check.messages) }}
+               </div>
             {% elseif check.actual is defined %}
-              {{ self.render_diff_element(check, check.actual, 0, popup_css_file, index, loop.index0) }}
+               {{ self.render_diff_element(check, check.actual, 0, popup_css_file, index, loop.index0, display_version, gradeable_id, who) }}
             {% endif %}
             {% if check.expected is defined %}
-                {{ self.render_diff_element(check, check.expected, 1, popup_css_file, index, loop.index0) }}
+                {{ self.render_diff_element(check, check.expected, 1, popup_css_file, index, loop.index0, display_version, gradeable_id, who) }}
             {% endif %}
             {% if check.difference is defined %}
-                {{ self.render_diff_element(check, check.difference, 2, popup_css_file, index, loop.index0) }}
+                {{ self.render_diff_element(check, check.difference, 2, popup_css_file, index, loop.index0, display_version, gradeable_id, who) }}
             {% endif %}
 
         </div>
@@ -50,7 +50,7 @@
 
 {% endfor %}
 
-{% macro render_diff_element(check, element, side, popup_css_file, index, check_index) %}
+{% macro render_diff_element(check, element, side, popup_css_file, index, check_index, display_version, gradeable_id, who) %}
     <!-- Readded css here so the popups have the css -->
     <div class=
       {% if element.type != "sequence_diagram" %}
@@ -64,6 +64,12 @@
                 <span onclick="openPopUp('{{ popup_css_file }}', '{{ element.title }}', {{ index }}, {{ check_index }}, {{ side }});" class="key_to_click" tabindex="0">
                     <i class="fas fa-window-restore" style="cursor: pointer;"></i>
                 </span>
+                {% if side == 0 %}
+                <span onclick="downloadTestCaseResult({{ index }}, '{{ check.filename }}', {{ display_version }}, '{{ gradeable_id }}', '{{ who }}')" tabindex="0"
+                title="Downloads your test case result file">
+                    <i class="fas fa-download" style="cursor: pointer;"></i>
+                </span>
+                {% endif %}
             {% endif %}
         </h4>
 

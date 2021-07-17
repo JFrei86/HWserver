@@ -649,6 +649,10 @@ function downloadFile(path, dir) {
     window.location = buildCourseUrl(['download']) + `?dir=${encodeURIComponent(dir)}&path=${encodeURIComponent(path)}`;
 }
 
+function downloadTestCaseResult(testcase, name, version, gradeable, user) {
+    window.location = buildCourseUrl(['gradeable', gradeable, 'downloadTestCaseResult']) + `?version=${version}&test_case=${testcase+1}&file_name=${name}&user_id=${user}`;
+}
+
 function downloadStudentAnnotations(url, path, dir) {
     window.open(url, "_blank", "toolbar=no, scrollbars=yes, resizable=yes, width=700, height=600");
 }

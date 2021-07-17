@@ -154,9 +154,11 @@ class AutoGradingView extends AbstractView {
                 ];
             }
             else {
+                $file_name = pathinfo($file_path, PATHINFO_BASENAME);
                 $check = [
                     "messages" => $autocheck->getMessages(),
-                    "description" => $description
+                    "description" => $description,
+                    "filename" => $file_name
                 ];
                 $actual_title = "";
                 if ($diff_viewer->hasDisplayExpected() || $diff_viewer->getActualFilename() != "") {

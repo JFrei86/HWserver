@@ -33,4 +33,8 @@ class MiscView extends AbstractView {
             "code_js" => $code_js
         ]);
     }
+
+    public function tooLarge() {
+        return $this->core->getOutput()->renderTwigTemplate("misc/TooLarge.twig");
+    }
 }

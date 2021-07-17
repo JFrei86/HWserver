@@ -530,13 +530,23 @@ class DiffViewer {
         $start = null;
         $html = "<div class='diff-container'><div class='diff-code'>\n";
 
+        $num_blanks = 0;
         if (isset($this->add[$type]) && count($this->add[$type]) > 0) {
             if (array_key_exists(-1, $this->add[$type])) {
+                $num_blanks = $this->add[$type][-1];
                 $html .= "\t<div class='highlight' id='{$this->id}{$type}_{$this->link[$type][-1]}'>\n";
-                for ($k = 0; $k < $this->add[$type][-1]; $k++) {
+                for ($k = 0; $k < $num_blanks; $k++) {
                     $html .= "\t<div class='row bad'><div class='empty_line'>&nbsp;</div></div>\n";
                 }
                 $html .= "\t</div>\n";
+            }
+        }
+        if (count($lines) + $num_blanks > 1000) {
+            if ($type === self::EXPECTED) {
+                $html = "<p style='color: black;'>This file has been truncated. Please contact instructor if you feel that you need the full file.</p>" . $html;
+            }
+            elseif ($type === self::ACTUAL) {
+                $html = "<p style='color: black;'>This file has been truncated. Please download it to see the full file.</p>" . $html;
             }
         }
         /*
@@ -545,6 +555,9 @@ class DiffViewer {
          */
         $max_digits = strlen((string) count($lines));
         for ($i = 0; $i < count($lines); $i++) {
+            if ($i === 1000 - $num_blanks) {
+                break;
+            }
             $j = $i + 1;
             if ($start === null && isset($this->diff[$type][$i])) {
                 $start = $i;
