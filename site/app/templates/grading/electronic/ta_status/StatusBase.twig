@@ -262,7 +262,7 @@
             {% if core.getUser().getGradingRegistrationSections()|length != 0 %}
                 {%  if team_assignment %}
                     <details class="btn btn-primary" id="details_button">
-                        <summary float="left">
+                        <summary>
                             <a id="zip_link_limited"
                                 href="{{ download_zip_url }}">
                                 Download Zip of Assigned Teams
@@ -280,7 +280,7 @@
                     </details>
                 {% else %}
                     <details class="btn btn-primary" id="details_button">
-                        <summary float="left">
+                        <summary>
                             <a id="zip_link_limited"  
                                 href="{{ download_zip_url }}">
                                 Download Zip of Assigned Students
@@ -301,7 +301,7 @@
             {% endif %}
             {% if core.getUser().accessFullGrading() and submitted_total %}
                 <details class="btn btn-default" id="details_button">
-                    <summary float="left">
+                    <summary>
                         <a id="zip_link_full"
                             href="{{ download_zip_url }}?type=all">
                             Download Zip of All Students

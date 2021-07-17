@@ -58,6 +58,7 @@ with open(os.path.join(SUBMITTY_INSTALL_DIR,"config","database.json")) as databa
 
 DB_ONLY = False
 NO_SUBMISSIONS = False
+NO_GRADING = False
 
 NOW = dateutils.get_current_time()
 
@@ -67,11 +68,12 @@ def main():
     Main program execution. This gets us our commandline arugments, reads in the data files,
     and then sets us up to run the create methods for the users and courses.
     """
-    global DB_ONLY, NO_SUBMISSIONS
+    global DB_ONLY, NO_SUBMISSIONS, NO_GRADING
 
     args = parse_args()
     DB_ONLY = args.db_only
     NO_SUBMISSIONS = args.no_submissions
+    NO_GRADING = args.no_grading
     if not os.path.isdir(SUBMITTY_DATA_DIR):
         raise SystemError("The following directory does not exist: " + SUBMITTY_DATA_DIR)
     for directory in ["courses"]:
@@ -232,8 +234,9 @@ def main():
     os.system("systemctl restart submitty_daemon_jobs_handler")
     os.system("systemctl restart submitty_websocket_server")
 
-    # queue up all of the newly created submissions to grade!
-    os.system("/usr/local/submitty/bin/regrade.py --no_input /var/local/submitty/courses/")
+    if not NO_GRADING:
+        # queue up all of the newly created submissions to grade!
+        os.system("/usr/local/submitty/bin/regrade.py --no_input /var/local/submitty/courses/")
 
 def get_random_text_from_file(filename):
     line = ""
@@ -474,6 +477,7 @@ def parse_args():
 
     parser.add_argument("--db_only", action='store_true', default=False)
     parser.add_argument("--no_submissions", action='store_true', default=False)
+    parser.add_argument("--no_grading", action='store_true', default=False)
     parser.add_argument("--users_path", default=os.path.join(SETUP_DATA_PATH, "users"),
                         help="Path to folder that contains .yml files to use for user creation. Defaults to "
                              "../data/users")
