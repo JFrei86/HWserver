@@ -1894,15 +1894,15 @@ class SubmissionController extends AbstractController {
         if ($gradeable !== null) {
             if ($gradeable->hasAllowedTime()) {
                 $allowed_time = $gradeable->getUserAllowedTime($this->core->getUser());
-                $thing = $this->core->getQueries()->getGradeableAccessUser($gradeable->getId(), $this->core->getUser()->getId())[0]['timestamp'];
-                $now = new \DateTime($thing);
-                $now->add(new \DateInterval('PT' . $allowed_time . 'M'));
+                $first_access = $this->core->getQueries()->getGradeableAccessUser($gradeable->getId(), $this->core->getUser()->getId())[0]['timestamp'];
+                $due_time = new \DateTime($first_access);
+                $due_time->add(new \DateInterval('PT' . $allowed_time . 'M'));
                 $duedate = $gradeable->getSubmissionDueDate();
                 return JsonResponse::getSuccessResponse([
                     'deadline' => $duedate->getTimestamp() * 1000,
-                    'user_allowed_time_deadline' => $now->getTimestamp() * 1000,
+                    'user_allowed_time_deadline' => $due_time->getTimestamp() * 1000,
                     'user_allowed_time' => $allowed_time,
-                    'user_start_time' => (new \DateTime($thing))->getTimestamp() * 1000,
+                    'user_start_time' => (new \DateTime($first_access))->getTimestamp() * 1000,
                     'current_time' => (new \DateTime())->getTimestamp() * 1000
                 ]);
             }

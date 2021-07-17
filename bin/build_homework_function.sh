@@ -165,6 +165,10 @@ function build_homework {
         exit 1
     fi
 
+    # Add allowed minutes in database from config if exists
+    python3 ${SUBMITTY_INSTALL_DIR}/bin/set_allowed_mins.py ${hw_build_path}/complete_config.json ${semester} ${course} ${assignment}
+    echo $?
+
     # Run the complete config json through a python json syntax checker.
     python3 ${GRADINGCODE}/json_syntax_checker.py complete_config.json
     py_res=$?
