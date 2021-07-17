@@ -6133,7 +6133,7 @@ AND gc_id IN (
     }
 
 
-    public function openQueue($queue_code, $token) {
+    public function openQueue($queue_code, $token, $regex_pattern) {
         $this->course_db->query("SELECT * FROM queue_settings WHERE UPPER(TRIM(code)) = UPPER(TRIM(?))", [$queue_code]);
 
         //cannot have more than one queue with the same code
@@ -6141,8 +6141,13 @@ AND gc_id IN (
             return false;
         }
 
-        $this->course_db->query("INSERT INTO queue_settings (open,code,token) VALUES (TRUE, TRIM(?), TRIM(?))", [$queue_code,$token]);
+        $this->course_db->query("INSERT INTO queue_settings (open,code,token,regex_pattern) VALUES (TRUE, TRIM(?), TRIM(?), ?)", [$queue_code,$token,$regex_pattern]);
         return true;
+    }
+
+    public function getQueueRegex($queue_code) {
+        $this->course_db->query("SELECT regex_pattern FROM queue_settings WHERE code = ?", [$queue_code]);
+        return $this->course_db->rows();
     }
 
     public function toggleQueue($queue_code, $state) {
@@ -6367,6 +6372,10 @@ AND gc_id IN (
 
     public function changeQueueToken($token, $queue_code) {
         $this->course_db->query("UPDATE queue_settings SET token = ? WHERE code = ?", [$token, $queue_code]);
+    }
+
+    public function changeQueueRegex($regex_pattern, $queue_code) {
+        $this->course_db->query("UPDATE queue_settings SET regex_pattern = ? WHERE code = ?", [$regex_pattern, $queue_code]);
     }
 
 

@@ -2,6 +2,23 @@
 {% block popup_id %}filter-settings{% endblock %}
 {% block title %}Queue Settings{% endblock %}
 {% block body %}
+  <b>Help With Regex Patterns</b>
+    <a id="regex-help-icon" onclick="toggleRegexHelp()" onkeypress="toggleRegexHelp()" title="Help with regex patterns" aria-label="help with regex patterns" tabindex="0" style="padding:.5rem;">
+        <i class="fas fa-question"></i>
+    </a>
+    <div class="regex-help" style="display: none;">
+        Regex Patterns are to make sure your students enter the correct information
+        into the "contact information" field. Copy the patterns associated with the type of information you wish
+        your students to provide (copy the pound symbols too).<br>
+        <b>NOTE: REGEX PATTERNS ARE NOT REQUIRED</b><br>
+        <a href="https://www.php.net/manual/en/reference.pcre.pattern.syntax.php" target="_blank">Write Your Own Pattern</a><br>
+        <b>Webex link:</b> #webex.com/meet#<br>
+        <b>Skype link:</b> #join.skype#<br>
+        <b>Zoom link:</b> #zoom.us#<br>
+        <b>Email Address:</b> Just Enter "email" <br>
+        <b>Gmail address:</b> #@gmail.com#<br>
+    </div>
+    <br>
   <span class="option-title">Open new queue</span>
   <form method="post" id="open_new_queue" action="{{base_url}}" style="height:auto;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
@@ -10,7 +27,8 @@
     <a id="new_queue_rand_token" onclick="genRandCode('new_queue_token')" onkeypress="genRandCode('new_queue_token')" title="Generate random access code" aria-label="Generate random access code" tabindex="0" style="padding:.5rem;">
       <i class="fas fa-sync"></i>
     </a>
-    <button id="open_new_queue_btn" type="submit" class="btn btn-primary">Open New Queue</button>
+      <input type="text" id="regex" name="regex" placeholder="Contact Info Regex Pattern" aria-label="Regex" maxlength="2048">
+    <button id="open_new_queue_btn" type="submit" class="btn btn-primary" style="margin-top: 1rem;">Open New Queue</button>
   </form>
   <br>
   <span class="option-title">Modify old queue</span>
@@ -26,8 +44,20 @@
     <a id="old_queue_rand_token" onclick="genRandCode('old_queue_token')" onkeypress="genRandCode('old_queue_token')" title="Generate random access code" aria-label="Generate random access code" tabindex="0" style="padding:.5rem;">
       <i class="fas fa-sync"></i>
     </a>
-    <button id="change_code_btn" type="submit" class="btn btn-primary">Change Queue Access Code</button>
+    <button id="change_code_btn" type="submit" class="btn btn-primary">Change Queue Token</button>
   </form>
+  <br>
+    <form method="post" id="change_queue_regex" action="{{base_url}}/no_code_added/change_regex" style="height:auto;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+        <select id="old_queue_code_2" class="form-control" name="code" aria-label="Access Code" required="required">
+            <option value="">Queue Name</option>
+            {% for queue in viewer.getAllQueues() %}
+                <option value="{{queue['code']}}">{{queue['code']}}</option>
+            {% endfor %}
+        </select>
+        <input type="text" id="old_queue_regex" name="regex" placeholder="Contact Info Regex Pattern" aria-label="New Access Code" required="required">
+        <button id="change_regex_btn" type="submit" class="btn btn-primary" style="margin-left: 1rem;">Change Queue Regex Pattern</button>
+    </form>
   <br>
   <span class="option-title">Modify queue status</span>
   <table class="table table-striped" style="width:100%;">
@@ -44,7 +74,10 @@
           <tr>
           <td style="text-align: left;">
               <b>Name:</b>{{queue['code']}}<br>
-              <b>Access Code:</b>{{queue['token']}}</td>
+              <b>Access Code:</b>{{queue['token']}}<br>
+              {% if queue['regex_pattern'] != '' %}
+                <b>Regex Pattern:</b>{{queue['regex_pattern']}}</td>
+              {% endif %}
           <td>
               <input type="checkbox" class="toggle-queue-checkbox" aria-label="Toggle open/close for: {{queue['code']|upper}}" id="toggle-queue-{{loop.index}}" onchange="toggleQueue({{loop.index}}, '{{queue['code']}}')" {% if queue['open'] %} checked {% endif %} />
           </td>
@@ -66,6 +99,18 @@
       {% endfor %}
     </tbody>
   </table>
+    <script>
+        function toggleRegexHelp(){
+            $(".regex-help").toggle();
+        }
+        let queueDraggable = $(".popup-window").draggable();
+        //allow users to copy regex patterns from office hours queue settings
+        $('.regex-help', queueDraggable).mousedown(function(ev) {
+            queueDraggable.draggable('disable');
+        }).mouseup(function(ev) {
+            queueDraggable.draggable('enable');
+        });
+    </script>
 {% endblock %}
 {% block form %}
   <div style="height: 100%">

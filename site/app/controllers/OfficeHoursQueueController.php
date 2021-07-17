@@ -77,8 +77,8 @@ class OfficeHoursQueueController extends AbstractController {
                 new RedirectResponse($this->core->buildCourseUrl(['office_hours_queue']))
             );
         }
-
-        if ($this->core->getQueries()->openQueue($queue_code, $token)) {
+        $regex_pattern = isset($_POST['regex']) ? $_POST['regex'] : '';
+        if ($this->core->getQueries()->openQueue($queue_code, $token, $regex_pattern)) {
             $this->core->addSuccessMessage("New queue added");
             Logger::logQueueActivity($this->core->getConfig()->getSemester(), $this->core->getDisplayedCourseName(), $queue_code, "CREATED");
         }
@@ -127,7 +127,27 @@ class OfficeHoursQueueController extends AbstractController {
                 );
             }
             else {
-                $contact_info = $_POST['contact_info'];
+                //make sure contact information matches instructors regex pattern
+                $regex_pattern = $this->core->getQueries()->getQueueRegex($queue_code)[0]['regex_pattern'];
+                if ($regex_pattern !== '') {
+                    $contact_info = $_POST['contact_info'];
+                    $invalid = false;
+                    //if checking for any email address
+                    if ($regex_pattern === 'email' || $regex_pattern === 'Email') {
+                        if (!filter_var($contact_info, FILTER_VALIDATE_EMAIL)) {
+                            $invalid = true;
+                        }
+                    }
+                    elseif (preg_match($regex_pattern, $contact_info) == 0) {
+                        $invalid = true;
+                    }
+                    if ($invalid) {
+                        $this->core->addErrorMessage("Invalid contact info");
+                        return MultiResponse::RedirectOnlyResponse(
+                            new RedirectResponse($this->core->buildCourseUrl(['office_hours_queue']))
+                        );
+                    }
+                }
             }
         }
 
@@ -413,6 +433,29 @@ class OfficeHoursQueueController extends AbstractController {
         $queue_code = trim($queue_code);
         $this->core->getQueries()->changeQueueToken($token, $queue_code);
         $this->core->addSuccessMessage("Queue Access Code Changed");
+        return MultiResponse::RedirectOnlyResponse(
+            new RedirectResponse($this->core->buildCourseUrl(['office_hours_queue']))
+        );
+    }
+
+    /**
+     * @Route("/courses/{_semester}/{_course}/office_hours_queue/{queue_code}/change_regex", methods={"POST"})
+     * @AccessControl(role="LIMITED_ACCESS_GRADER")
+     * @return MultiResponse
+     */
+    public function changeRegex($queue_code) {
+        if (empty($queue_code)) {
+            $this->core->addErrorMessage("Missing queue name");
+            return MultiResponse::RedirectOnlyResponse(
+                new RedirectResponse($this->core->buildCourseUrl(['office_hours_queue']))
+            );
+        }
+
+        $regex_pattern = $_POST['regex'];
+
+        $queue_code = trim($_POST['code']);
+        $this->core->getQueries()->changeQueueRegex($regex_pattern, $queue_code);
+        $this->core->addSuccessMessage("Queue Regex Pattern Changed");
         return MultiResponse::RedirectOnlyResponse(
             new RedirectResponse($this->core->buildCourseUrl(['office_hours_queue']))
         );
