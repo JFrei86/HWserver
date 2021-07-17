@@ -8,6 +8,7 @@
           <th>{{ setting.right|default('Option') }}</th>
         </tr>
         {% for option in setting.values %}
+        {% if option.options|length > 0 %}
         <tr>
             <td>{{ option.name }}</td>
             <td>
@@ -18,6 +19,7 @@
                 </select>
             </td>
         </tr>
+        {% endif %}
         {% endfor %}
 </table>
 {% endfor %}

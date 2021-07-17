@@ -2,7 +2,9 @@
 {% block popup_id %}settings-popup{% endblock %}
 {% block title %}Settings{% endblock %}
 {% block body %}
-    <div id="ta-grading-general-settings"></div>
+    <div id="ta-grading-settings-list" data-full_access="{{ core.getUser().getGroup() <= 2 ? 'true' : 'false' }}">
+        <div id="ta-grading-general-settings"></div>
+    </div>
     <h2>Hotkeys</h2>
     <br>
     <div id="hotkeys-list"></div>

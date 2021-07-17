@@ -607,6 +607,7 @@ function gotoMainPage() {
 function gotoPrevStudent() {
 
   let filter = localStorage.getItem("general-setting-arrow-function") || "default";
+  let navigate_assigned_students_only = localStorage.getItem("general-setting-navigate-assigned-students-only") !== "false";
 
   let selector = "#prev-student";
   let window_location = $(selector)[0].dataset.href + "&filter=" + filter;
@@ -632,6 +633,10 @@ function gotoPrevStudent() {
       break;
   }
 
+  if (!navigate_assigned_students_only) {
+    window_location += "&navigate_assigned_students_only=false";
+  }
+
   if (getGradeableId() !== '') {
     closeAllComponents(true).then(function () {
       window.location = window_location;
@@ -649,6 +654,7 @@ function gotoPrevStudent() {
 function gotoNextStudent() {
 
   let filter = localStorage.getItem("general-setting-arrow-function") || "default";
+  let navigate_assigned_students_only = localStorage.getItem("general-setting-navigate-assigned-students-only") !== "false";
 
   let selector = "#next-student";
   let window_location = $(selector)[0].dataset.href + "&filter=" + filter;
@@ -672,6 +678,10 @@ function gotoNextStudent() {
     case "active-inquiry":
       window_location += "&component_id=" + getFirstOpenComponentId();
       break;
+  }
+
+  if (!navigate_assigned_students_only) {
+    window_location += "&navigate_assigned_students_only=false";
   }
 
   if (getGradeableId() !== '') {
