@@ -50,7 +50,7 @@
 #
 #     g_overall_ta_instructions: [optional] string for additional details to TA for grading. Defaults to .
 #
-#     g_grader_assignment_method: [optional] integer between 0-2 inclusive, where 0 is grade by rotating section, 1 is grade by 
+#     g_grader_assignment_method: [optional] integer between 0-2 inclusive, where 0 is grade by rotating section, 1 is grade by
 #         by registration section, and 2 is all access grading.  Defaults to 1: grade by registration section.
 #
 #     g_ta_view_start_date: when are TAs allowed to view this gradeable on the navigation page (before grading has started).
@@ -98,6 +98,11 @@
 #
 #     eg_max_random_submissions: [optional] integer limiting how many random submissions should be generated.
 #         Defaults to no limit.
+#
+#     eg_lichen_sample_path: the path from which to pull submissions if unique submissions are desired
+#
+#     eg_plagiarized_users: a list of users and individual files for them to submit from the lichen_sample_path
+#                           if this isn't provided but eg_lichen_sample_path is, random submissions will be made from the directory provided
 #
 # To make how the order of the time fields work more explicit:
 # g_ta_view_start_date < eg_submission_open_date < eg_submission_due_date < g_grade_start_date < g_grade_released_date

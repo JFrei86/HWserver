@@ -8,7 +8,7 @@
 #   user_id: string representing the id for the user both in the database as well as linux
 #
 #   user_numeric_id: string represented the numeric id, e.g a RIN used in the database
-#         by default this is null in the database, adding this value will populate the numeric_id column 
+#         by default this is null in the database, adding this value will populate the numeric_id column
 #         for the sample user being created, see more_autograding_examples/bulk_upload_pdfs/submissions/04_numeric_ids.txt
 #         for a list of ids to use
 #

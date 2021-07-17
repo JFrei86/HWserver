@@ -1,0 +1,437 @@
+code: plagiarism
+instructor: instructor
+registration_sections: 10
+registered_students: 800
+no_registration_students: 15
+no_rotating_students: 15
+unregistered_students: 15
+gradeables:
+########## SMALL -- 2-3 submissions ############################################
+########## can be debugged by hand, human can look at output json files ########
+- g_id: two_identical_files
+  g_title: Two Identical Files (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/two_identical_files/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission.txt
+  - bitdiddle
+    - submission.txt
+
+
+- g_id: two_overlapping_files
+  g_title: Two Overlapping Files (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/two_overlapping_files/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_a.txt
+  - bitdiddle
+    - submission_b.txt
+
+
+- g_id: no_matches
+  g_title: No Matches (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/no_matches/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_a.txt
+  - bitdiddle
+    - submission_b.txt
+
+
+- g_id: repeated_sequences
+  g_title: Repeated Sequences (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/repeated_sequences/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_a.txt
+  - bitdiddle
+    - submission_b.txt
+
+
+- g_id: provided_code
+  g_title: Provided Code (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/provided_code/data
+  eg_plagiarized_users:
+  - aphacker
+    - a.cpp
+  - bitdiddle
+    - b.cpp
+  - student
+    - c.cpp
+
+
+- g_id: plagiarism_test_small
+  g_title: Plagiarism Test (Small)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/small_tests/plagiarism_test_small/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_a.txt
+  - bitdiddle
+    - submission_b.txt
+
+
+########## MEDIUM -- 3-10 submissions ##########################################
+########## can be debugged from the UI by a human ##############################
+- g_id: multiple_matches
+  g_title: Multiple Matches (Medium) # 5 users, 7 submissions -- users match several other users
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/medium_tests/multiple_matches/data
+
+- g_id: common_code
+  g_title: Common Code (Medium) # 10 submissions
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/medium_tests/common_code/data
+
+- g_id: regex_selected_files
+  g_title: Regex Selected Files (Medium) # pdf2text + cat_{number}.cpp --> cat_*.cpp + one other random file
+  gradeable_config: pdf_word_count
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/medium_tests/regex_selected_files/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_0.zip
+  - bitdiddle
+    - submission_1.zip
+  - student
+    - submission_2.zip
+  - smithj
+    - submission_3.zip
+  - browna
+    - submission_4.zip
+
+- g_id: long_files
+  g_title: Long Files (Medium) # thousands of lines
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/medium_tests/long_files/data
+  eg_plagiarized_users:
+  - aphacker
+    - submission_a.txt
+  - bitdiddle
+    - submission_b.txt
+  - student
+    - submission_c.txt
+  - smithj
+    - submission_d.txt
+
+- g_id: ignore_submissions
+  g_title: Ignore Submissions (Medium)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/medium_tests/ignore_submissions/data
+  eg_plagiarized_users:
+  - aphacker
+    - aphacker.txt
+  - bitdiddle
+    - bitdiddle.txt
+  - student
+    - student.txt
+  - grader
+    - grader.txt
+  - grader2
+    - grader2.txt
+  - ta
+    - ta.txt
+  - ta2
+    - ta2.txt
+  - instructor
+    - instructor.txt
+
+########## LARGE -- 10+ submissions ############################################
+########## stress-testing (probably challenging/impossible to debug) ###########
+- g_id: average_class_single_submission
+  g_title: Average Class Single Submission (Large) # 75 students, 1 submission per student, ~100-line files (3 codewars problems, seperate files, zipped into one file)
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/large_tests/average_class_single_submission/data
+
+# - g_id: average_assignment
+#   g_title: Average Class Assignment (Large) # 75 students, 5-20? submissions per student, ~400-line files
+#   gradeable_config: upload_only
+#   components:
+#   - gc_lower_clamp: 0
+#     gc_default: 2
+#     gc_max_value: 2
+#     gc_upper_clamp: 2
+#     gc_title: Placeholder
+#     marks:
+#       - gcm_note: Full Credit
+#         gcm_points: 0
+#   eg_submission_due_date: 1972-01-01 23:59:59
+#   eg_submission_open_date: 1971-01-01 23:59:59
+#   g_grade_due_date: 1974-01-01 23:59:59
+#   g_grade_released_date: 1974-01-01 23:59:59
+#   eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+#   eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+#   g_grade_start_date: 1973-01-01 23:59:59
+#   g_ta_view_start_date: 1970-01-01 23:59:59
+#   eg_use_ta_grading: false
+#   # sample_path: TODO
+
+- g_id: large_class_test
+  g_title: Large Class Test (Large) # 400 students, one submission each, ~100-line files
+  gradeable_config: upload_only
+  components:
+  - gc_lower_clamp: 0
+    gc_default: 2
+    gc_max_value: 2
+    gc_upper_clamp: 2
+    gc_title: Placeholder
+    marks:
+      - gcm_note: Full Credit
+        gcm_points: 0
+  eg_submission_due_date: 1972-01-01 23:59:59
+  eg_submission_open_date: 1971-01-01 23:59:59
+  g_grade_due_date: 1974-01-01 23:59:59
+  g_grade_released_date: 1974-01-01 23:59:59
+  eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+  eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+  g_grade_start_date: 1973-01-01 23:59:59
+  g_ta_view_start_date: 1970-01-01 23:59:59
+  eg_use_ta_grading: false
+  eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/large_tests/large_class_test/data
+
+# - g_id: large_class_large_assignment
+#   g_title: Large Class Large Assignment (Large) # 400 students, 0-20 submissions each, ~600-line files
+#   gradeable_config: upload_only
+#   components:
+#   - gc_lower_clamp: 0
+#     gc_default: 2
+#     gc_max_value: 2
+#     gc_upper_clamp: 2
+#     gc_title: Placeholder
+#     marks:
+#       - gcm_note: Full Credit
+#         gcm_points: 0
+#   eg_submission_due_date: 1972-01-01 23:59:59
+#   eg_submission_open_date: 1971-01-01 23:59:59
+#   g_grade_due_date: 1974-01-01 23:59:59
+#   g_grade_released_date: 1974-01-01 23:59:59
+#   eg_grade_inquiry_start_date: 1974-01-02 23:59:59
+#   eg_grade_inquiry_due_date: 1974-01-08 23:59:59
+#   g_grade_start_date: 1973-01-01 23:59:59
+#   g_ta_view_start_date: 1970-01-01 23:59:59
+#   eg_use_ta_grading: false
+#   # sample_path: TODO
+#   eg_lichen_sample_path: /usr/local/submitty/GIT_CHECKOUT/LichenTestData/tools/codewars_scraper/results/GapInPrimes
+
+# TODO: (future) test submissions with teams

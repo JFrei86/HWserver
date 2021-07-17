@@ -17,9 +17,6 @@ fi
 MY_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 SUBMITTY_REPOSITORY=${MY_PATH}/../..
 
-# FIXME: should read this from a config file
-SUBMITTY_INSTALL_DIR=/usr/local/submitty
-
 ########################################################################
 
 # These variables specify the minimum version necessary for
