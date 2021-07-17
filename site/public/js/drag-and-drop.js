@@ -303,6 +303,8 @@ function setButtonStatus() {
         $("#submit").prop("disabled", false);
     }
 
+    $(".popup-submit").prop("disabled", false);
+
     // We only have "non-previous" submissions if there's stuff in the file array as well as if we've
     // toggled the necessary flag that we're on a submission that would have previous (to prevent costly dom
     // lookups for the existance of #getprev id in the page)

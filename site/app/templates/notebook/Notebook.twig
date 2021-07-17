@@ -8,6 +8,15 @@
     {% set num_multiple_choice = 0 %}
     {% set num_file_submissions = 0 %}
     {% set data_non_item_ref = 0 %}
+    {% if is_timed and allowed_minutes > 25 %}
+        <div class="notebook-submit-popup">
+            Submit often and save your progress !<br>
+            <hr>
+            <button id="submit" class="btn btn-success popup-submit">Submit</button>
+            <button class="btn btn-primary" onclick="closePopup()">Close</button>
+            <button class="btn btn-danger" onclick="DontShowPopupSubmit()">Don't Ask Me Again</button>
+        </div>
+    {% endif %}
     {% for cell in notebook %}
         <div id="content_{{ loop.index0 }}" class="{{ cell.type }}" {% if cell.item_ref is defined %}data-item-ref={{ cell.item_ref }}{% else %}data-non-item-ref={{data_non_item_ref}}{% set data_non_item_ref = data_non_item_ref + 1 %}{% endif %}>
 
@@ -262,6 +271,38 @@
 </div>
 
 <script>
+    {% if is_timed and allowed_minutes > 25 %}
+        //for displaying popup submit button
+        window.onload = function(){
+            sessionStorage.setItem("show_popup_submit", "yes");
+            setInterval(count, 1000);
+        };
+
+        let counter = 0;
+        function count(){
+            counter++;
+            //interval is 20 percent of overall time allowed or 10 minutes, whichever is greater
+            let interval = ((({{ allowed_minutes * 60 }}) / 5) > 600 ? ({{ allowed_minutes * 60 }}) / 5 : 600);
+            if (counter > interval) {
+                if (sessionStorage.getItem("show_popup_submit") === 'yes') {
+                    $(".notebook-submit-popup").show();
+                    counter = 0;
+                }
+            }
+        }
+
+        function closePopup() {
+            $(".notebook-submit-popup").hide();
+            counter = 0;
+            count();
+        }
+
+        function DontShowPopupSubmit() {
+            closePopup();
+            sessionStorage.setItem("show_popup_submit", "no");
+        }
+    {% endif %}
+
     function populatePreviousFiles(part){
         let prev_files = {
             {% for file in old_files %}

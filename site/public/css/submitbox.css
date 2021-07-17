@@ -92,6 +92,17 @@
     border-radius: 13px;
 }
 
+.notebook-submit-popup {
+    z-index: 2;
+    border-radius: 1rem;
+    padding: 1rem;
+    background-color: #888888;
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 2rem;
+}
+
 @media (max-width: 401px) {
     .grade-results {
         display: flex;
