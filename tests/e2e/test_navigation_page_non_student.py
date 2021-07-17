@@ -20,7 +20,7 @@ class TestNavigationPageNonStudent(BaseTestCase):
                                  .find_element(By.ID, 'beta-section')
                                  .find_elements(By.CLASS_NAME, 'gradeable-row')))
         self.assertEqual("open", elements[2].get_attribute('id'))
-        self.assertEqual(3, len(self.driver
+        self.assertEqual(4, len(self.driver
                                 .find_element(By.ID, 'open-section')
                                 .find_elements(By.CLASS_NAME, "gradeable-row")))
         self.assertEqual("closed", elements[3].get_attribute('id'))
@@ -49,7 +49,7 @@ class TestNavigationPageNonStudent(BaseTestCase):
                                 .find_element(By.ID, 'beta-section')
                                 .find_elements(By.CLASS_NAME, "gradeable-row")))
         self.assertEqual("open", elements[1].get_attribute('id'))
-        self.assertEqual(3, len(self.driver
+        self.assertEqual(4, len(self.driver
                                 .find_element(By.ID, 'open-section')
                                 .find_elements(By.CLASS_NAME, "gradeable-row")))
         self.assertEqual("closed", elements[2].get_attribute('id'))

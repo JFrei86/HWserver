@@ -4684,6 +4684,7 @@ AND gc_id IN (
                   eg_submission_open_date AS submission_open_date,
                   eg_submission_due_date AS submission_due_date,
                   eg_has_due_date AS has_due_date,
+                  eg_has_release_date as has_release_date,
                   eg_late_days AS late_days,
                   eg_allow_late_submission AS late_submission_allowed,
                   eg_precision AS precision,
@@ -5304,7 +5305,8 @@ AND gc_id IN (
             DateUtils::dateTimeToString($gradeable->getTaViewStartDate()),
             DateUtils::dateTimeToString($gradeable->getGradeStartDate()),
             DateUtils::dateTimeToString($gradeable->getGradeDueDate()),
-            DateUtils::dateTimeToString($gradeable->getGradeReleasedDate()),
+            $gradeable->getGradeReleasedDate() !== null ?
+                    DateUtils::dateTimeToString($gradeable->getGradeReleasedDate()) : null,
             $gradeable->getMinGradingGroup(),
             $gradeable->getSyllabusBucket(),
             $gradeable->getAllowCustomMarks()
@@ -5332,7 +5334,8 @@ AND gc_id IN (
             $params = [
                 $gradeable->getId(),
                 DateUtils::dateTimeToString($gradeable->getSubmissionOpenDate()),
-                DateUtils::dateTimeToString($gradeable->getSubmissionDueDate()),
+                $gradeable->getSubmissionDueDate() !== null ?
+                    DateUtils::dateTimeToString($gradeable->getSubmissionDueDate()) : null,
                 $gradeable->isVcs(),
                 $gradeable->getVcsSubdirectory(),
                 $gradeable->getVcsHostType(),
@@ -5496,6 +5499,7 @@ AND gc_id IN (
                     $gradeable->isStudentViewAfterGrades(),
                     $gradeable->isStudentSubmit(),
                     $gradeable->hasDueDate(),
+                    $gradeable->hasReleaseDate(),
                     $gradeable->getAutogradingConfigPath(),
                     $gradeable->getLateDays(),
                     $gradeable->isLateSubmissionAllowed(),
@@ -5528,6 +5532,7 @@ AND gc_id IN (
                       eg_student_view_after_grades=?,
                       eg_student_submit=?,
                       eg_has_due_date=?,
+                      eg_has_release_date=?,            
                       eg_config_path=?,
                       eg_late_days=?,
                       eg_allow_late_submission=?,

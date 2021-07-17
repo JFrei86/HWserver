@@ -33,22 +33,33 @@
             </div>
         </div>
     </div>
+    <div id="manual_grading_container" {{ gradeable.hasDueDate() ? '' : 'hidden' }}>
+        <div class="manual_grading manual_grading_dates">
+            <input name="grade_start_date" id="date_grade" class="date_picker" type="text" value="{{ gradeable.getGradeStartDate()|date(date_format, timezone_string) }}">
+            <label for="date_grade">TA/Instructor Manual Grading Open Date (grading may begin)</label>
 
-    <div class="manual_grading manual_grading_dates">
-        <input name="grade_start_date" id="date_grade" class="date_picker" type="text" value="{{ gradeable.getGradeStartDate()|date(date_format, timezone_string) }}">
-        <label for="date_grade">TA/Instructor Manual Grading Open Date (grading may begin)</label>
+            <br />
 
-        <br />
+            <input name="grade_due_date" id="date_grade_due" class="date_picker" type="text" value="{{ gradeable.getGradeDueDate()|date(date_format, timezone_string) }}">
+            <label for="date_grade_due">TA/Instructor Manual Grading Due Date</label>
 
-        <input name="grade_due_date" id="date_grade_due" class="date_picker" type="text" value="{{ gradeable.getGradeDueDate()|date(date_format, timezone_string) }}">
-        <label for="date_grade_due">TA/Instructor Manual Grading Due Date</label>
-
-        <br />
+            <br />
+        </div>
     </div>
+    <div id="release_container" {{ gradeable.hasDueDate() ? '' : 'hidden' }}>
+        <div>
+            <fieldset>
+                <legend>Will this assignment have a release date?</legend>
+                <input id="has_release_date_yes" name="has_release_date" value="true" type="radio" {{ gradeable.hasReleaseDate() ? 'checked' : '' }}/><label for="has_release_date_yes">Yes</label>
+                <input id="has_release_date_no" name="has_release_date" value="false" type="radio" {{ not gradeable.hasReleaseDate() ? 'checked' : '' }}/><label for="has_release_date_no">No</label>
+            </fieldset>
+        </div>
 
-    <input name="grade_released_date" id="date_released" class="date_picker" type="text" value="{{ gradeable.getGradeReleasedDate()|date(date_format, timezone_string) }}">
-    <label for="date_released">Grades Released Date (grades will be visible to students)</label>
-
+        <div id="release_date_container" {{ gradeable.hasReleaseDate() ? '' : 'hidden' }}>
+            <input name="grade_released_date" id="date_released" class="date_picker" type="text" value="{{ gradeable.getGradeReleasedDate()|date(date_format, timezone_string) }}">
+            <label for="date_released">Grades Released Date (grades will be visible to students)</label>
+        </div>
+    </div>
     <br />
 
     <div class="electronic_file electronic_file_dates">
@@ -122,13 +133,28 @@
         $('input[name=has_due_date]').change(function() {
             let cont = $('#due_date_container');
             let cont1 = $('#late_days_options_container');
+            let cont2 = $('#manual_grading_container');
+            let cont3 = $('#release_container');
             if($('#has_due_date_no').is(':checked')) {
                 cont.hide();
                 cont1.hide();
+                cont2.hide();
+                cont3.hide();
             }
             else {
                 cont.show();
                 cont1.show();
+                cont2.show();
+                cont3.show();
+            }
+        });
+        $('input[name=has_release_date]').change(function() {
+            let cont = $('#release_date_container');
+            if($('#has_release_date_no').is(':checked')) {
+                cont.hide();
+            }
+            else {
+                cont.show();
             }
         });
         flatpickr(".date_picker", {

@@ -102,8 +102,9 @@ def parse_datetime(date_string):
     :return:
     :rtype: datetime
     """
-
-    if isinstance(date_string, datetime):
+    if date_string is None:
+        return None
+    elif isinstance(date_string, datetime):
         my_timezone = date_string.tzinfo
         if my_timezone is None:
             my_timezone = get_timezone()

@@ -44,7 +44,16 @@ class LateDays extends AbstractModel {
 
         // Sort by due date
         usort($graded_gradeables, function (GradedGradeable $gg1, GradedGradeable $gg2) {
-            $time_diff = $gg1->getGradeable()->getSubmissionDueDate()->getTimestamp() - $gg2->getGradeable()->getSubmissionDueDate()->getTimestamp();
+            $time_diff = 0;
+            if ($gg1->getGradeable()->hasDueDate() && $gg2->getGradeable()->hasDueDate()) {
+                $time_diff = $gg1->getGradeable()->getSubmissionDueDate()->getTimestamp() - $gg2->getGradeable()->getSubmissionDueDate()->getTimestamp();
+            }
+            elseif ($gg2->getGradeable()->hasDueDate()) {
+                $time_diff = -1;
+            }
+            elseif ($gg1->getGradeable()->hasDueDate()) {
+                $time_diff = 1;
+            }
             if ($time_diff === 0) {
                 return strcmp($gg1->getGradeableId(), $gg2->getGradeableId());
             }
@@ -54,13 +63,20 @@ class LateDays extends AbstractModel {
         // Get the late day updates that the instructor will enter
         $this->late_days_updates = $late_day_updates ?? $this->core->getQueries()->getLateDayUpdates($user->getId());
 
+        $prev_late_days_available = $this->core->getConfig()->getDefaultStudentLateDays();
         // Construct late days info for each gradeable
         foreach ($graded_gradeables as $graded_gradeable) {
+            $late_days_remaining = $prev_late_days_available;
+            if ($graded_gradeable->getGradeable()->hasDueDate()) {
+                $late_days_remaining = $this->getLateDaysRemainingByContext($graded_gradeable->getGradeable()->getSubmissionDueDate());
+            }
+            $prev_late_days_available = $late_days_remaining;
+
             $info = new LateDayInfo(
                 $core,
                 $user,
                 $graded_gradeable,
-                $this->getLateDaysRemainingByContext($graded_gradeable->getGradeable()->getSubmissionDueDate())
+                $late_days_remaining
             );
             $this->late_day_info[$graded_gradeable->getGradeableId()] = $info;
         }
@@ -213,7 +229,17 @@ class LateDays extends AbstractModel {
 
         // Sort by 'timestamp'
         usort($late_day_events, function ($e1, $e2) {
-            return $e1['timestamp']->getTimestamp() - $e2['timestamp']->getTimestamp();
+            $diff = 0;
+            if ($e1['timestamp'] !== null && $e1['timestamp'] !== null) {
+                $diff = $e1['timestamp']->getTimestamp() - $e2['timestamp']->getTimestamp();
+            }
+            elseif ($e2['timestamp'] !== null) {
+                $time_diff = -1;
+            }
+            elseif ($e1['timestamp'] !== null) {
+                $time_diff = 1;
+            }
+            return $diff;
         });
 
         // step through each event and keep a running count of the late days

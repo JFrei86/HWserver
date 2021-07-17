@@ -160,7 +160,7 @@ class SubmissionController extends AbstractController {
         else {
             if (
                 $graded_gradeable !== null
-                && $gradeable->isTaGradeReleased()
+                && ($gradeable->isTaGradeReleased() || !$gradeable->hasReleaseDate())
                 && $gradeable->isTaGrading()
                 && $graded_gradeable->isTaGradingComplete()
             ) {

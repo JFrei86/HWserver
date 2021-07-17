@@ -24,6 +24,7 @@ class LateDaysTester extends BaseUnitTest {
         $gradeable->method('getLateDays')->willReturn($late_days);
         $gradeable->method('getId')->willReturn($gradeable_id);
         $gradeable->method('getType')->willReturn(GradeableType::ELECTRONIC_FILE);
+        $gradeable->method('hasDueDate')->willReturn(true);
 
         $auto_graded_gradeable = $this->createMockModel(AutoGradedGradeable::class);
         if ($submission_date !== '') {

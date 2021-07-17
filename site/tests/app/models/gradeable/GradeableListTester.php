@@ -462,7 +462,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '9998-01-01',
             '9999-01-01',
             true,
@@ -475,7 +475,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '1003-02-01',
             '9999-01-01',
             true,
@@ -488,7 +488,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '1003-02-01',
             '9999-01-01',
             true,
@@ -509,14 +509,16 @@ class GradeableListTester extends BaseUnitTest {
         $this->assertCount(0, $actual);
 
         $actual = $list->getOpenGradeables();
-        $this->assertCount(1, $actual);
+        $this->assertCount(2, $actual);
         $this->assertArrayHasKey('01_future_no_due', $actual);
+        $this->assertArrayHasKey('02_grading_no_due', $actual);
         $this->assertEquals($gradeables['01_future_no_due'], $actual['01_future_no_due']);
+        $this->assertEquals($gradeables['02_grading_no_due'], $actual['02_grading_no_due']);
 
         $actual = $list->getClosedGradeables();
         $this->assertCount(0, $actual);
 
-        $expected = ['02_grading_no_due', '03_ta_submit_no_due'];
+        $expected = ['03_ta_submit_no_due'];
         $actual = $list->getGradingGradeables();
         $this->assertCount(count($expected), $actual);
         $this->assertEquals($expected, array_keys($actual));
@@ -538,7 +540,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '1003-02-01',
             '9999-01-01',
             true,
@@ -551,7 +553,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '1003-02-01',
             '9999-01-01',
             true,
@@ -564,7 +566,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '9997-01-01',
+            '9999-01-01',
             '1003-02-01',
             '9999-01-01',
             true,
@@ -577,7 +579,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '1002-01-01',
+            '9999-01-01',
             '1003-01-01',
             '1004-01-01',
             true,
@@ -590,7 +592,7 @@ class GradeableListTester extends BaseUnitTest {
             GradeableType::ELECTRONIC_FILE,
             '1000-01-01',
             '1001-01-01',
-            '1002-01-01',
+            '9999-01-01',
             '1003-01-01',
             '1004-01-01',
             true,
@@ -611,11 +613,15 @@ class GradeableListTester extends BaseUnitTest {
         $this->assertCount(0, $actual);
 
         $actual = $list->getOpenGradeables();
-        $this->assertCount(2, $actual);
+        $this->assertCount(4, $actual);
         $this->assertArrayHasKey('01_no_submit_no_due', $actual);
         $this->assertArrayHasKey('02_submitted_no_due', $actual);
+        $this->assertArrayHasKey('04_no_submit_grades_released', $actual);
+        $this->assertArrayHasKey('05_submitted_grades_released', $actual);
         $this->assertEquals($gradeables['01_no_submit_no_due'], $actual['01_no_submit_no_due']);
         $this->assertEquals($gradeables['02_submitted_no_due'], $actual['02_submitted_no_due']);
+        $this->assertEquals($gradeables['04_no_submit_grades_released'], $actual['04_no_submit_grades_released']);
+        $this->assertEquals($gradeables['05_submitted_grades_released'], $actual['05_submitted_grades_released']);
 
         $actual = $list->getGradingGradeables();
         $this->assertCount(1, $actual);
@@ -626,11 +632,7 @@ class GradeableListTester extends BaseUnitTest {
         $this->assertCount(0, $actual);
 
         $actual = $list->getGradedGradeables();
-        $this->assertCount(2, $actual);
-        $this->assertArrayHasKey('04_no_submit_grades_released', $actual);
-        $this->assertArrayHasKey('05_submitted_grades_released', $actual);
-        $this->assertEquals($gradeables['04_no_submit_grades_released'], $actual['04_no_submit_grades_released']);
-        $this->assertEquals($gradeables['05_submitted_grades_released'], $actual['05_submitted_grades_released']);
+        $this->assertCount(0, $actual);
     }
 
     public function testNoSubmittableGradeables() {
@@ -741,6 +743,7 @@ class GradeableListTester extends BaseUnitTest {
      * @param $ta_grading
      * @param $student_submit
      * @param $has_due_date
+     * @param $has_release_date
      * @param $has_submission, from perspective of the user
      *
      * @return Gradeable
@@ -756,7 +759,8 @@ class GradeableListTester extends BaseUnitTest {
         $grade_released_date,
         $ta_grading = true,
         $student_submit = true,
-        $has_due_date = true
+        $has_due_date = true,
+        $has_release_date = true
     ) {
         $timezone = new \DateTimeZone('America/New_York');
         $details = [
@@ -780,6 +784,7 @@ class GradeableListTester extends BaseUnitTest {
             'student_view_after_grades' => false,
             'student_submit' => $student_submit,
             'has_due_date' => $has_due_date,
+            'has_release_date' => $has_release_date,
             'peer_grading' => false,
             'peer_grade_set' => false,
             'late_submission_allowed' => true,
@@ -794,7 +799,7 @@ class GradeableListTester extends BaseUnitTest {
             'grade_released_date' => new \DateTime($grade_released_date, $timezone),
             'team_lock_date' => new \DateTime($submission_due_date, $timezone),
             'submission_open_date' => new \DateTime($submission_open_date, $timezone),
-            'submission_due_date' => new \DateTime($submission_due_date, $timezone),
+            'submission_due_date' => $submission_due_date === null ? null : new \DateTime($submission_due_date, $timezone),
             'late_days' => 2,
             'grade_inquiry_start_date' => new \DateTime($grade_released_date, $timezone),
             'grade_inquiry_due_date' => new \DateTime($grade_released_date, $timezone),

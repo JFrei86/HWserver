@@ -95,12 +95,11 @@ class RainbowCustomization extends AbstractModel {
                 $last_index = count($this->customization_data[$bucket]) - 1;
                 $max_score += $gradeable->getAutogradingConfig()->getTotalNonExtraCredit();
             }
-
             $this->customization_data[$bucket][] = [
                 "id" => $gradeable->getId(),
                 "title" => $gradeable->getTitle(),
                 "max_score" => $max_score,
-                "grade_release_date" => DateUtils::dateTimeToString($gradeable->getGradeReleasedDate()),
+                "grade_release_date" => $gradeable->hasReleaseDate() ? DateUtils::dateTimeToString($gradeable->getGradeReleasedDate()) : DateUtils::dateTimeToString($gradeable->getSubmissionOpenDate()),
                 "override" => false,
                 "override_max" => $max_score
             ];

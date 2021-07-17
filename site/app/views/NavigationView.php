@@ -525,6 +525,19 @@ class NavigationView extends AbstractView {
                 $title = "SUBMIT";
                 $class = "btn-default";
             }
+            elseif ($gradeable->isStudentSubmit() && !$gradeable->hasDueDate() && $list_section == GradeableList::OPEN && $graded_gradeable->isTaGradingComplete()) {
+                if ($ta_graded_gradeable->getUserViewedDate() === null) {
+                    $class = "btn-success";
+                }
+                else {
+                    $class = "btn-default";
+                }
+                $title = "VIEW GRADE OR RESUBMIT";
+            }
+            elseif ($gradeable->isStudentSubmit() && $graded_gradeable->isTaGradingComplete() && $ta_graded_gradeable->getUserViewedDate() === null) {
+                $title = "RESUBMIT";
+                $class = "btn-success";
+            }
             elseif ($graded_gradeable->getAutoGradedGradeable()->isAutoGradingComplete() && $list_section == GradeableList::OPEN) {
                 //if the user submitted something on time
                 $title = "RESUBMIT";
@@ -637,6 +650,26 @@ class NavigationView extends AbstractView {
                     "title" => "REGRADE",
                     "class" => "btn btn-danger btn-nav btn-nav-grade",
                     "href" => $href
+                ]);
+            }
+
+            if (!$gradeable->hasDueDate()) {
+                $progress_bar = $gradeable->getGradingProgress($this->core->getUser());
+                if ($progress_bar === 0) {
+                    $progress_bar = 0.01;
+                }
+                if (!$gradeable->anySubmissions()) {
+                    $progress_bar = 0;
+                }
+                $title = "GRADE";
+                if ($list_section != GradeableList::OPEN) {
+                    $title = "PREVIEW GRADING";
+                }
+                return new Button($this->core, [
+                    "title" => $title,
+                    "class" => "btn btn-nav btn-nav-grade btn-default",
+                    "href" => $href,
+                    "progress" => 100 * $progress_bar
                 ]);
             }
         }
@@ -757,13 +790,15 @@ class NavigationView extends AbstractView {
     private function getQuickLinkButton(Gradeable $gradeable, int $list_section) {
         $button = null;
         if ($list_section === GradeableList::GRADING) {
-            $button = new Button($this->core, [
-                "subtitle" => "RELEASE GRADES NOW",
-                "href" => $this->core->buildCourseUrl(['gradeable', $gradeable->getId(), 'quick_link']) . '?'
-                    . http_build_query(['action' => 'release_grades_now']),
-                "class" => "btn btn-primary btn-nav btn-nav-open",
-                "name" => "quick-link-btn"
-            ]);
+            if ($gradeable->hasReleaseDate()) {
+                $button = new Button($this->core, [
+                    "subtitle" => "RELEASE GRADES NOW",
+                    "href" => $this->core->buildCourseUrl(['gradeable', $gradeable->getId(), 'quick_link']) . '?'
+                        . http_build_query(['action' => 'release_grades_now']),
+                    "class" => "btn btn-primary btn-nav btn-nav-open",
+                    "name" => "quick-link-btn"
+                ]);
+            }
         }
         elseif ($list_section === GradeableList::FUTURE) {
             $button = new Button($this->core, [
@@ -814,7 +849,7 @@ class NavigationView extends AbstractView {
                 ]);
             }
         }
-        elseif ($list_section === GradeableList::OPEN) {
+        elseif ($list_section === GradeableList::OPEN && $gradeable->hasDueDate()) {
             $url = $this->core->buildCourseUrl(['gradeable', $gradeable->getId(), 'quick_link']) . '?'
                 . http_build_query(['action' => 'close_submissions']);
 

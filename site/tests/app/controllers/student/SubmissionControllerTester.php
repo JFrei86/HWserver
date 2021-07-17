@@ -165,6 +165,7 @@ class SubmissionControllerTester extends BaseUnitTest {
             'student_view_after_grades' => false,
             'student_submit' => true,
             'has_due_date' => true,
+            'has_release_date' => true,
             'peer_grading' => false,
             'peer_grade_set' => false,
             'late_submission_allowed' => true,
