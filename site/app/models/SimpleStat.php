@@ -7,6 +7,7 @@ use app\libraries\Core;
 /**
  * Class SimpleStat
 
+ * @method bool getComponent()
  * @method string getTitle()
  * @method float getMaxValue()
  * @method int getOrder()

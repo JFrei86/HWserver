@@ -20,9 +20,9 @@ class Team extends AbstractModel {
 
     /** @prop @var string The id of this team of form "<unique number>_<creator user id>" */
     protected $id;
-    /** @prop @var integer rotating section (registration or rotating) of team creator */
+    /** @prop @var string registration section (registration or rotating) of team creator */
     protected $registration_section;
-    /** @prop @var integer registration section (registration or rotating) of team creator */
+    /** @prop @var integer rotating section (registration or rotating) of team creator */
     protected $rotating_section;
     /** @prop @var string[] containing user ids of team members */
     protected $member_user_ids;
