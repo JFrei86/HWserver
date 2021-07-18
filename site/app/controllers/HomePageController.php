@@ -69,6 +69,32 @@ class HomePageController extends AbstractController {
     }
 
     /**
+     * @Route("/home/groups")
+     *
+     * @param null $user_id
+     * @return MultiResponse
+     */
+    public function getGroups($user_id = null): MultiResponse {
+        $user = $this->core->getUser();
+        if (is_null($user) || !$user->accessFaculty()) {
+            return new MultiResponse(
+                JsonResponse::getFailResponse("You don't have access to this endpoint."),
+                new WebResponse("Error", "errorPage", "You don't have access to this page.")
+            );
+        }
+
+        if (is_null($user_id) || $user->getAccessLevel() !== User::LEVEL_SUPERUSER) {
+            $user_id = $user->getId();
+        }
+
+        $groups = $this->core->getQueries()->getUserGroups($user_id);
+
+        return new MultiResponse(
+            JsonResponse::getSuccessResponse($groups)
+        );
+    }
+
+    /**
      * Display the HomePageView to the student.
      *
      * @Route("/home")
@@ -106,8 +132,9 @@ class HomePageController extends AbstractController {
             !isset($_POST['course_semester'])
             || !isset($_POST['course_title'])
             || !isset($_POST['head_instructor'])
+            || !isset($_POST['group_name'])
         ) {
-            $error = "Semester, course title or head instructor not set.";
+            $error = "Semester, course title, head instructor, or group name not set.";
             $this->core->addErrorMessage($error);
             return new MultiResponse(
                 JsonResponse::getFailResponse($error),
@@ -140,31 +167,20 @@ class HomePageController extends AbstractController {
             );
         }
 
-        $base_course_semester = '';
-        $base_course_title = '';
-
-        if (isset($_POST['base_course'])) {
-            $exploded_course = explode('|', $_POST['base_course']);
-            $base_course_semester = $exploded_course[0];
-            $base_course_title = $exploded_course[1];
-        }
-        elseif (isset($_POST['base_course_semester']) && isset($_POST['base_course_title'])) {
-            $base_course_semester = $_POST['base_course_semester'];
-            $base_course_title = $_POST['base_course_title'];
-        }
+        $group_name = $_POST['group_name'];
 
         try {
             $group_check = $this->core->curlRequest(
                 $this->core->getConfig()->getCgiUrl() . "group_check.cgi" . "?" . http_build_query(
                     [
                         'head_instructor' => $head_instructor,
-                        'base_path' => "/var/local/submitty/courses/" . $base_course_semester . "/" . $base_course_title
+                        'group_name' => $group_name
                     ]
                 )
             );
 
-            if (empty($group_check) || empty($base_course_semester) || empty($base_course_title)) {
-                $error = "Invalid base course.";
+            if (empty($group_check) || empty($group_name)) {
+                $error = "Invalid group name.";
                 $this->core->addErrorMessage($error);
                 return new MultiResponse(
                     JsonResponse::getFailResponse($error),
@@ -198,8 +214,7 @@ class HomePageController extends AbstractController {
             'semester' => $semester,
             'course' => $course_title,
             'head_instructor' => $head_instructor,
-            'base_course_semester' => $base_course_semester,
-            'base_course_title' => $base_course_title
+            'group_name' => $group_name
         ];
 
         $json = json_encode($json, JSON_PRETTY_PRINT);

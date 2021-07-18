@@ -73,17 +73,17 @@
 
         <div class="option row">
             <div class="option-desc col-md-6">
-                <label for="base_courses">
-                    <span class="option-title block">Prior Course Offering</span>
-                    <span class="option-alt">Select a prior offering of this course from the dropdown menu.</span>
-                    <span class="option-alt block">Note: Instructors and graders with access to the prior course files on GNU/Linux will be able to see the content of the new course as well.</span>
-                    <span class="option-alt block">Contact the system administrator if this course should not share a GNU/Linux group with any prior course.</span>
+                <label for="group_name">
+                    <span class="option-title block">Prior Course Group</span>
+                    <span class="option-alt">Select a group for this course from the dropdown menu.</span>
+                    <span class="option-alt block">Note: Instructors and graders in the group on GNU/Linux will be able to see the content of the new course as well.</span>
+                    <span class="option-alt block">Contact the system administrator if this course should receive a new/different GNU/Linux group.</span>
                     <span class="required_type">(Required)</span>
                 </label>
             </div>
 
             <div class="option-input col-md-6">
-                <select name="base_course" id="base_courses" class="auto_save"></select>
+                <select name="group_name" id="group_name" class="auto_save"></select>
             </div>
         </div>
 
@@ -110,13 +110,13 @@
         let headInstructor = $('#head_instructor').val();
         $.ajax({
             type: "GET",
-            url: buildUrl(['home', 'courses']) + `?as_instructor=true&user_id=${headInstructor}`,
+            url: buildUrl(['home', 'groups']) + `?user_id=${headInstructor}`,
             success: function(data) {
                 let json = JSON.parse(data);
-                let courses = json['data']['unarchived_courses'].concat(json['data']['archived_courses']);
-                $('#base_courses').find('option').remove();
-                $.each(courses, (i, val) => {
-                    $('#base_courses').append(`<option value="${val['semester']}|${val['title']}">${val['semester']}.${val['title']}`)
+                let groups = json['data'];
+                $('#group_name').find('option').remove();
+                $.each(groups, (i, val) => {
+                    $('#group_name').append(`<option value="${val['group_name']}">${val['group_name']}`)
                 })
             }
         });

@@ -17,12 +17,11 @@ print()
 arguments = cgi.FieldStorage()
 status = 'fail'
 
-base_path = arguments.getvalue('base_path', None)
+group_name = arguments.getvalue('group_name', None)
 head_instructor = arguments.getvalue('head_instructor', None)
 
-if base_path and head_instructor:
-    base_group = Path(base_path).group()
-    if head_instructor in grp.getgrnam(base_group).gr_mem:
+if group_name and head_instructor:
+    if head_instructor in grp.getgrnam(group_name).gr_mem:
         status = 'success'
 
 print(json.dumps({ "status": status }))
